@@ -1,0 +1,155 @@
+/* =========================
+   Browse Page
+   ========================= */
+.browse-page {
+  min-height: 100vh;
+  background: #0d0f16;
+  color: #ffffff;
+  padding-bottom: 40px;
+}
+
+/* Page title */
+.browse-page h2 {
+  padding: 22px 30px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff; /* IMDb yellow */
+}
+
+/* =========================
+   Video List (ROW BY ROW)
+   ========================= */
+.video-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 0 30px;
+}
+
+/* =========================
+   Video Card
+   ========================= */
+.video-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  background: #1a1d26;
+  border-radius: 16px;
+  padding: 16px;
+
+  text-decoration: none;
+  color: #ffffff;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.video-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* Thumbnail */
+.video-card img {
+  width: 240px;
+  height: 135px;              /* 16:9 */
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+/* =========================
+   Video Info
+   ========================= */
+.video-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Title */
+.video-info h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+/* Meta row (IMDb, season, etc.) */
+.meta {
+  display: flex;
+  gap: 14px;
+  font-size: 0.9rem;
+  color: #cfcfcf;
+}
+
+.imdb {
+  color: #f5c518;
+  font-weight: 600;
+}
+
+.season {
+  color: #9aa3b2;
+}
+
+/* =========================
+   Tags Preview
+   ========================= */
+.tag-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.mini-tag {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+/* =========================
+   Loading / Empty text
+   ========================= */
+.browse-page p {
+  padding: 0 30px;
+  color: #b5b5b5;
+  font-size: 0.95rem;
+}
+
+/* =========================
+   Mobile Responsive
+   ========================= */
+@media (max-width: 768px) {
+  .browse-page h2 {
+    padding: 16px;
+    font-size: 1.3rem;
+  }
+
+  .video-grid {
+    padding: 0 16px;
+  }
+
+  .video-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .video-card img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .video-info h4 {
+    font-size: 1rem;
+  }
+
+  .meta {
+    font-size: 0.85rem;
+  }
+}

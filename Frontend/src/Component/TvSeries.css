@@ -1,0 +1,236 @@
+.series-page {
+  background: #0d0f12;
+  min-height: 100vh;
+  color: #fff;
+  padding: 80px 20px 40px;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.loading,
+.no-series {
+  text-align: center;
+  color: #aaa;
+  font-size: 1rem;
+  margin-top: 40px;
+}
+
+.series-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.series-card {
+  background: #151728;
+  border-radius: 14px;
+  overflow: hidden;
+  width: 220px;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.series-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+}
+
+.thumbnail-wrap {
+  position: relative;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+  background: #111;
+}
+
+.season-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.series-info {
+  padding: 10px 12px;
+}
+
+.series-info h3 {
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.series-info p {
+  color: #ccc;
+  font-size: 0.85rem;
+}
+
+/* ===== Modal Overlay ===== */
+.series-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999 !important;
+  overflow-y: auto;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.series-modal-content {
+  background: #151728;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 850px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.6);
+  position: relative;
+  animation: scaleIn 0.25s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.close-btn:hover {
+  transform: scale(1.2);
+  color: #ff4d4d;
+}
+
+/* ===== Hero inside modal ===== */
+.series-hero {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.series-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.series-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+
+.series-hero-overlay h2 {
+  font-size: 1.6rem;
+  margin: 0;
+}
+
+.series-meta {
+  margin-top: 10px;
+  color: #ccc;
+  display: flex;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.season-selector {
+  margin: 14px 0;
+}
+
+.season-selector select {
+  background: #0d0f12;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.episode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.episode-card {
+  display: flex;
+  gap: 10px;
+  background: #1a1c25;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.episode-card:hover {
+  transform: scale(1.02);
+}
+
+.episode-thumb img {
+  width: 160px;
+  height: 90px;
+  object-fit: cover;
+}
+
+.episode-info {
+  padding: 10px;
+  flex: 1;
+}
+
+.episode-info h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.episode-info p {
+  color: #aaa;
+  font-size: 0.85rem;
+  margin: 0 0 6px;
+}
+
+.episode-duration {
+  color: #777;
+  font-size: 0.8rem;
+}

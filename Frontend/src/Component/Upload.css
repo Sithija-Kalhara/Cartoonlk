@@ -1,0 +1,203 @@
+html, body {
+  background-color: #0d0f16;
+  font-family: "Poppins", sans-serif;
+  color: #e6edf3;
+}
+
+/* 🧱 Container */
+.upload-container {
+  max-width: 760px;
+  margin: 50px auto;
+  padding: 40px 35px;
+  background: #0d0f16;
+  border: 1px solid #30363d;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.upload-container h2 {
+  text-align: center;
+  color: #58a6ff;
+  margin-bottom: 28px;
+  letter-spacing: 0.5px;
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 🔤 Inputs */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="file"],
+textarea {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+  padding: 10px 14px;
+  border-radius: 8px;
+  outline: none;
+  transition: 0.2s;
+  font-size: 0.95rem;
+}
+
+input:focus, textarea:focus {
+  border-color: #58a6ff;
+  background: #161b22;
+}
+
+/* 📦 File Inputs */
+input[type="file"] {
+  border: 1px dashed #444c56;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+  background: #238636;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-right: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+input[type="file"]::-webkit-file-upload-button:hover {
+  background: #2ea043;
+}
+
+/* 🏷️ Labels */
+label {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #8b949e;
+  margin-top: 6px;
+  display: block;
+}
+
+/* 📝 Textarea */
+textarea {
+  min-height: 60px;
+  resize: vertical;
+  line-height: 1.4;
+  background: #0d1117;
+}
+
+/* 🚀 Submit Button */
+button[type="submit"] {
+  background: linear-gradient(90deg, #238636, #2ea043);
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 25px;
+  transition: 0.2s ease;
+}
+
+button[type="submit"]:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(90deg, #2ea043, #3fb950);
+}
+
+/* 🎭 Actor / Dubber Rows */
+.actor-row, .dubber-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.actor-row input, .dubber-row input {
+  flex: 1;
+  background: #161b22;
+}
+
+.actor-row button, .dubber-row button {
+  background: #da3633;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.actor-row button:hover, .dubber-row button:hover {
+  background: #f85149;
+}
+
+/* ➕ Add buttons */
+button[type="button"] {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #58a6ff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: 0.2s;
+}
+
+button[type="button"]:hover {
+  background: #2d333b;
+  border-color: #58a6ff;
+}
+
+/* 📜 Status */
+.upload-container p {
+  text-align: center;
+  margin-top: 20px;
+  color: #58a6ff;
+  font-weight: 500;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+/* 🌟 Section Headings */
+h3 {
+  margin-top: 25px;
+  margin-bottom: 10px;
+  color: #79c0ff;
+  border-bottom: 1px solid #30363d;
+  padding-bottom: 6px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* 📱 Responsive */
+@media (max-width: 600px) {
+  .upload-container {
+    margin: 25px;
+    padding: 25px;
+  }
+
+  input, textarea {
+    font-size: 0.9rem;
+  }
+
+  button[type="submit"] {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .actor-row, .dubber-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

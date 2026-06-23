@@ -1,0 +1,422 @@
+/* ================================================= */
+/* 1. Global & Base Styles */
+/* ================================================= */
+.cartoon-container {
+  background-color: #0d0f16;
+  min-height: 100vh;
+  color: white;
+  font-family: 'Inter', -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+.cartoon-container a {
+  text-decoration: none !important;
+  color: inherit;
+}
+
+/* ================================================= */
+/* 2. Hero Section (Trailer Area) */
+/* ================================================= */
+.hero-section {
+  position: relative;
+  width: 100%;
+  height: 85vh;
+  background: #000;
+  display: flex;
+  align-items: center;
+}
+
+.hero-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.6;
+  z-index: 0;
+}
+
+.hero-overlay {
+  position: relative;
+  z-index: 10;
+  padding: 0 4%;
+  max-width: 800px;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  margin-bottom: 15px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+.hero-description {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin-bottom: 25px;
+  color: #e5e5e5;
+}
+
+.play-btn {
+  background-color: white;
+  color: black !important;
+  padding: 12px 35px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: opacity 0.2s;
+}
+
+.play-btn:hover {
+  background-color: rgba(255, 0, 0, 0.8);
+}
+
+/* ================================================= */
+/* 3. Movie Sections & Rows */
+/* ================================================= */
+.movie-section {
+  padding: 20px 4%;
+  position: relative;
+  z-index: 5;
+}
+
+.movie-section:first-of-type {
+  margin-top: -120px;
+}
+
+.section-title, .section-title-countinue {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #e5e5e5;
+}
+
+.scroll-container {
+  position: relative;
+  overflow: visible; /* Overlay එක ලොකු වීමට අත්‍යවශ්‍යයි */
+}
+
+.movie-list {
+  display: flex;
+  gap: 12px;
+  padding: 50px 0 !important; /* Expansion එකට ඉහළින් සහ පහළින් හොඳින් ඉඩ තැබීම */
+  overflow-x: auto;
+  overflow-y: visible !important; /* පින්තූරයේ තිබූ කැපීයාමේ ගැටලුව විසඳීමට */
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.movie-list::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  width: 45px;
+  height: 80px;
+  font-size: 2rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.scroll-container:hover .scroll-btn {
+  opacity: 1;
+}
+
+.scroll-btn.left { left: -2%; border-radius: 0 4px 4px 0; }
+.scroll-btn.right { right: -2%; border-radius: 4px 0 0 4px; }
+
+/* ================================================= */
+/* 4. Movie Card & Hover Overlay (The Ultimate Solution) */
+/* ================================================= */
+.movie-card-container {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.movie-card {
+  width: 220px;
+  border-radius: 6px;
+  background-color: #181818;
+  transition: opacity 0.3s ease;
+}
+
+/* මවුස් එක ගිය විට යටින් තියෙන card එක ලස්සනට opacity අඩු වේ */
+.movie-card.hovered {
+  opacity: 0.2;
+}
+
+.thumbnail-wrapper, .thumbnail-wrapper-2 {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  background: #1a1a1a;
+}
+
+.movie-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.movie-info {
+  margin-top: 10px;
+}
+
+.movie-title {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- NETFLIX STYLE HOVER OVERLAY --- */
+.movie-card-overlay {
+  position: absolute;
+  top: -30px;     /* මුල් Card එකට වඩා තරමක් ඉහළින් පටන් ගනී */
+  left: -20px;    /* දෙපැත්තට සමානව ලොකු වේ */
+  width: 260px;   /* මුල් Card එකට වඩා පළලයි */
+  background-color: #181818 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8) !important;
+  z-index: 9999 !important; /* හැමදේටම උඩින් පාවී පෙනේ */
+  pointer-events: auto !important;
+  display: block !important;
+  overflow: hidden;
+  animation: NetflixPop 0.25s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+@keyframes NetflixPop {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.overlay-preview img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.overlay-details {
+  padding: 15px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.play-btn-small {
+  background: white !important;
+  color: black !important;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.add-btn-small {
+  background: rgba(42, 42, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metadata {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.rating-tag {
+  border: 1px solid #46d369;
+  color: #46d369;
+  padding: 0 5px;
+  font-size: 11px;
+}
+
+.hd-tag {
+  border: 1px solid #777;
+  padding: 0 4px;
+  font-size: 10px;
+  border-radius: 2px;
+}
+
+.tags {
+  font-size: 12px;
+  color: #aaa;
+  display: flex;
+  gap: 6px;
+}
+
+.tags span:not(:last-child)::after {
+  content: '•';
+  margin-left: 6px;
+}
+
+/* ================================================= */
+/* 5. Continue Watching Progress Track */
+/* ================================================= */
+.progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.progress-bar {
+  height: 100%;
+  background: #e50914;
+}
+
+/* ================================================= */
+/* 6. Series Modal & Episode Cards */
+/* ================================================= */
+.series-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 5000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 50px;
+}
+
+.series-modal-content {
+  background: #181818;
+  width: 90%;
+  max-width: 850px;
+  max-height: 90vh;
+  border-radius: 10px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.series-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+}
+
+.series-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.series-hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 40px 20px 20px;
+  background: linear-gradient(to top, #181818, transparent);
+}
+
+.season-selector { padding: 20px; }
+.season-selector select { background: #333; color: white; padding: 8px 15px; border-radius: 4px; }
+
+.episode-list { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 15px; }
+.episode-card { display: flex; gap: 20px; padding: 15px; background: #222; border-radius: 6px; }
+.ep-thumb { flex: 0 0 150px; }
+.ep-thumb img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 4px; }
+.ep-info h4 { margin: 0 0 8px; color: white; }
+.ep-info p { font-size: 13px; color: #aaa; margin: 0; }
+
+/* ================================================= */
+/* 7. Badges & Loading Screen */
+/* ================================================= */
+.recent-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #e50914;
+  color: white;
+  font-size: 10px;
+  text-align: center;
+  padding: 3px 0;
+  font-weight: bold;
+}
+
+.tag.top-right {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.loading-screen {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #0d0f16;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-top-color: #e50914;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.footer { padding: 40px 4%; text-align: center; color: #666; border-top: 1px solid #222; }
+.footer-links { margin-bottom: 10px; }
+.footer-links a { margin: 0 10px; font-size: 14px; }
+
+/* Mobile View UX */
+@media (max-width: 768px) {
+  .movie-card { width: 140px; }
+  .movie-card-overlay { display: none !important; }
+}

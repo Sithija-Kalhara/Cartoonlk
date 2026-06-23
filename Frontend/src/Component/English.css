@@ -1,0 +1,63 @@
+.cartoon-container {
+  background: var(--bg, #0d0f16);
+  color: #fff;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+}
+
+.section-title {
+  font-size: 1.6rem;
+  margin: 20px 30px 10px;
+  font-weight: 600;
+  color: #f5c400;
+}
+
+.movie-section {
+  padding: 10px 20px;
+}
+
+.movie-list {
+  display: flex;
+  overflow-x: auto;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.movie-card {
+  background: #121212;
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 170px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(245, 196, 0, 0.3);
+}
+
+.movie-thumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.movie-title {
+  font-size: 0.95rem;
+  padding: 6px 10px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.movie-date {
+  padding: 0 10px 10px;
+  font-size: 0.8rem;
+  color: #bbb;
+}
+
+.loading, .error, .no-videos {
+  text-align: center;
+  padding: 40px 0;
+  color: #aaa;
+}

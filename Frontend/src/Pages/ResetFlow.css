@@ -1,0 +1,142 @@
+/* ---------- Global Wrapper ---------- */
+.auth-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: radial-gradient(circle at top, #1c1f26 0%, #0e1014 100%);
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ---------- Main Container ---------- */
+.auth-container {
+  width: 460px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 30px 25px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  animation: fadeIn 0.6s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- Heading ---------- */
+.auth-container h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 15px;
+  letter-spacing: 0.5px;
+}
+
+/* ---------- Message Styles ---------- */
+.message {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.message.success {
+  background: rgba(0, 255, 100, 0.15);
+  color: #00ff9d;
+  border: 1px solid rgba(0, 255, 100, 0.3);
+}
+.message.error {
+  background: rgba(255, 0, 60, 0.15);
+  color: #ff4d6d;
+  border: 1px solid rgba(255, 0, 60, 0.3);
+}
+
+/* ---------- Form ---------- */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-form p {
+  font-size: 13px;
+  color: #aaa;
+  line-height: 1.4;
+}
+
+/* ---------- Inputs ---------- */
+.auth-form input {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.auth-form input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.auth-form input:focus {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px #ff0040;
+}
+
+/* ---------- Button ---------- */
+.auth-form button {
+  padding: 12px;
+  background: linear-gradient(90deg, #ff0040, #ff5e00);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.auth-form button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.auth-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Switch Links ---------- */
+.switch {
+  font-size: 13px;
+  color: #bbb;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+.switch:hover {
+  color: #ff0040;
+}
+
+/* ---------- Animation ---------- */
+@keyframes fadeIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 420px) {
+  .auth-container {
+    width: 90%;
+    padding: 25px 20px;
+  }
+  .auth-container h2 {
+    font-size: 20px;
+  }
+}

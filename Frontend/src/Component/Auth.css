@@ -1,0 +1,180 @@
+/* --- Add to index.css --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  
+  /* This is the full-screen background */
+  background-image: url('https://images.unsplash.com/photo-1574375927938-d5a98e8addc5?auto=format&fit=crop&w=2069&q=80');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* Keeps the background still on scroll */
+  min-height: 100vh;
+}
+
+/* --- Replace Auth.css --- */
+
+/* This new wrapper centers the form on the page */
+.auth-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* This is the main "glass" container */
+.auth-container {
+  width: 100%;
+  max-width: 450px; /* A bit wider for the header */
+  padding: 40px 30px;
+  
+  /* The "glass" effect */
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+
+/* --- Header Styling --- */
+.auth-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.auth-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.brand-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* This styles the "LK" part of your title */
+.brand-title span {
+  color: #e50914; /* Premium Red */
+}
+
+.brand-subtitle {
+  font-size: 0.9rem;
+  color: #ddd;
+  margin-top: 5px;
+}
+
+/* --- Form Styling --- */
+.auth-form h2 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 25px;
+  font-weight: 500;
+}
+
+.auth-form input {
+  width: 100%;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  outline: none;
+  border-radius: 8px;
+  padding: 0 20px;
+  font-size: 1rem;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.auth-form input::placeholder {
+  color: #ddd;
+}
+
+.auth-form button {
+  width: 100%;
+  height: 50px;
+  background: #e50914; /* Premium Red */
+  border: none;
+  outline: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #fff;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.auth-form button:hover {
+  background: #c10812; /* Darker red on hover */
+}
+
+/* --- Message & Switch Styling --- */
+
+/* Base style for messages */
+.message {
+  text-align: center;
+  margin-bottom: 15px;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+/* Green for success */
+.message.success {
+  background: rgba(76, 175, 80, 0.2);
+  color: #9effa2;
+}
+
+/* Red for error */
+.message.error {
+  background: rgba(244, 67, 54, 0.2);
+  color: #ff9a9a;
+}
+
+.switch {
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 20px;
+  color: #ddd;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.switch:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* ... (all your existing .auth-form button styles) ... */
+
+/* --- ADD THIS NEW STYLE --- */
+.auth-form .resend-btn {
+  background-color: #555; /* A different, secondary color */
+  margin-top: 10px; /* Add some space */
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.auth-form .resend-btn:hover {
+  background-color: #777;
+}

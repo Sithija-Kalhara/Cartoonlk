@@ -1,0 +1,359 @@
+/* --- Base & General --- */
+
+.movie-section {
+  margin-top: 40px;
+  padding: 0 40px 60px 40px;
+}
+
+.section-title {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+/* 🧱 Grid for vertical scroll */
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+}
+
+.movie-card {
+  background-color: #151728;
+  border-radius: 10px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2);
+}
+
+/* 🖼 Thumbnail */
+.thumbnail-wrapper {
+  position: relative;
+  width: 100%;
+  height: 110px;
+  overflow: hidden;
+}
+
+.movie-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.movie-card:hover .movie-thumbnail {
+  transform: scale(1.1);
+}
+
+/* 🧾 Info */
+.movie-info {
+  padding: 10px;
+}
+
+.movie-title {
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.movie-date {
+  font-size: 13px;
+  color: #aaa;
+}
+
+/* --- Series Page --- */
+
+.series-hero {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+}
+
+.series-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.7);
+}
+
+.series-hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 40px;
+  color: #fff;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+}
+
+.series-banner {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.series-meta {
+  display: flex;
+  gap: 10px;
+  color: #aaa;
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+.series-description {
+  padding: 0 20px;
+  color: #ddd;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.season-selector {
+  padding: 10px 20px;
+}
+
+.season-selector select {
+  background: #0d0e18;
+  color: white;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.play-btn-main {
+  display: inline-block;
+  margin-top: 10px;
+  background: #e50914;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 15px;
+  transition: background 0.2s ease;
+}
+
+.play-btn-main:hover {
+  background: #f40612;
+}
+
+/* --- Episode List --- */
+
+.episode-list {
+  padding: 10px 20px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.episode-card {
+  display: flex;
+  background: #1d1f2f;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.episode-thumb img {
+  width: 180px;
+  height: 100px;
+  object-fit: cover;
+}
+
+.episode-info {
+  padding: 10px;
+  color: #fff;
+  flex: 1;
+}
+
+.episode-info h4 {
+  font-size: 16px;
+  margin: 0 0 4px;
+}
+
+.episode-info p {
+  color: #bbb;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.episode-duration {
+  color: #999;
+  font-size: 12px;
+}
+
+/* --- Modal --- */
+
+.series-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
+}
+
+.series-modal-content {
+  position: relative;
+  background: #111;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  color: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Footer --- */
+
+.footer {
+  margin-top: 80px;
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-links a {
+  color: #ccc;
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: #ff7373;
+}
+
+/* =====================================================
+  📱 RESPONSIVE OPTIMIZATIONS (Tablets & Mobile)
+===================================================== */
+
+@media (max-width: 768px) {
+  .movie-section {
+    padding: 0 20px 40px 20px;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+
+  .movie-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 15px;
+  }
+
+  .series-hero {
+    height: 200px;
+  }
+
+  .series-hero-overlay {
+    padding: 20px;
+    /* Make title smaller */
+    font-size: 18px;
+  }
+
+  .play-btn-main {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+
+  .series-meta,
+  .series-description,
+  .season-selector,
+  .episode-list {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .episode-list {
+    padding-top: 10px;
+    padding-bottom: 30px;
+  }
+
+  .episode-card {
+    flex-direction: column;
+  }
+
+  .episode-thumb img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .episode-info {
+    padding: 12px;
+  }
+
+  .episode-info h4 {
+    font-size: 15px;
+  }
+
+  .episode-info p {
+    font-size: 12px;
+  }
+
+  .series-modal {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .series-modal-content {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* =====================================================
+  📱 RESPONSIVE OPTIMIZATIONS (Small Phones)
+===================================================== */
+
+@media (max-width: 480px) {
+  .movie-section {
+    padding: 0 15px 30px 15px;
+  }
+
+  .movie-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .movie-card:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  .movie-card:hover .movie-thumbnail {
+    transform: none;
+  }
+
+  .section-title {
+    font-size: 20px;
+  }
+
+  .footer {
+    margin-top: 40px;
+  }
+}

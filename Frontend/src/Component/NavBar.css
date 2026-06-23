@@ -1,0 +1,952 @@
+.navbar {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  background: #1c1c1c;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+.nav-inner {
+  max-width: 1900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 16px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo .logo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.navlogo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+.logo .logo-text {
+  color: #ffcc00;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: "Baloo 2", sans-serif;
+  transition: color 0.3s ease;
+
+}
+.logo-text:hover {
+  color: #fff000;
+}
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+}
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.98rem;
+}
+.nav-links a:hover,
+.nav-links a.active {
+  color: #00d8ff;
+}
+.search-bar {
+  position: relative;
+  margin-left: auto;
+  flex: 0 0 240px;
+  transition: flex 0.3s ease;
+}
+.search-bar input {
+  width: 100%;
+  padding: 8px 34px 8px 14px;
+  border-radius: 20px;
+  border: none;
+  outline: none;
+  background: #2c2c2c;
+  color: #fff;
+  font-size: 0.95rem;
+}
+.search-bar input:focus {
+  background: #3a3a3a;
+}
+.clear-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: color 0.2s ease;
+}
+.clear-btn:hover {
+  color: #ff0000;
+}
+
+/* 🎯 Search Dropdown Refined */
+.search-dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #1b1b1b;
+  border-radius: 10px;
+  border: 1px solid #2a2a2a;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  max-height: 60vh;
+  padding: 6px 0;
+  z-index: 2000;
+  animation: fadeSlide 0.25s ease;
+}
+
+/* ✨ Individual result item */
+.search-dropdown .result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  text-decoration: none;
+  color: #f5f5f5;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.search-dropdown .result:hover,
+.search-dropdown .result.active {
+  background: #2b2b2b;
+  transform: scale(1.02);
+}
+
+/* 🖼️ Thumbnail */
+.search-dropdown .result img {
+  width: 46px;
+  height: 46px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+/* 🧾 Titles */
+.search-dropdown .result .meta {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.search-dropdown .result .title {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-dropdown .result .date {
+  font-size: 0.78rem;
+  color: #aaa;
+}
+
+/* 🌀 Searching & Empty state */
+.search-row.muted {
+  color: #aaa;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* ❌ Clear button */
+.search-dropdown .clear-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.search-dropdown .clear-btn:hover {
+  color: #ff5555;
+}
+
+/* 🎞️ Scrollbar style */
+.search-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 🌫️ Smooth fade-slide */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Mobile Search Bar Styles */
+.mobile-search-bar {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: 100%; 
+  background: #111;
+  padding: 8px 14px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 50;
+  flex-direction: column;
+  box-sizing: border-box; 
+}
+
+/* ✅ Show only when active */
+.mobile-search-bar.active {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Search input inside */
+.mobile-search-bar input {
+  width: 100%;
+  border-radius: 18px;
+  background: #2c2c2c;
+  color: #fff;
+  border: none;
+  padding: 8px 36px 8px 12px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+/* Dropdown inside Mobile Search Bar */
+.mobile-search-bar .search-dropdown {
+  position: relative; /* Make dropdown flow below the input */
+  top: 0;
+  left: 0;
+  right: 0;
+  border: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 300px; /* Adjust height inside the mobile bar */
+}
+
+/* Menu and Search Button Base Styles */
+.menu-btn {
+  display: none;
+  font-size: 22px;
+  background: transparent;
+  color: #fff;
+  border: 0;
+  cursor: pointer;
+  margin-left: auto;
+  transition: color 0.3s ease;
+}
+
+.search-icon-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+.search-icon-btn:hover {
+  color: #ffcc00;
+}
+
+/* 🖥️ Desktop view (>= 721px) */
+@media (min-width: 721px) {
+  .search-bar {
+    display: block; /* Show desktop search */
+  }
+  .search-icon-btn,
+  .menu-btn,
+  .mobile-search-bar {
+    display: none; /* Hide mobile-specific elements */
+  }
+}
+
+/* 📱 Mobile view (<= 720px) */
+@media (max-width: 720px) {
+    /* ... (Existing styles for html, body, navbar, nav-inner, etc.) ... */
+    
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden; /* stop side scroll & strip */
+        width: 100%;
+    }
+
+    .navbar {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        left: 0;
+        right: 0;
+    }
+
+    .nav-inner {
+        max-width: 100%;
+        margin: 0;
+        padding: 8px 14px;
+    }
+
+    .logo .logo-link {
+        gap: 6px;
+    }
+    .navlogo {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+    }
+    .logo .logo-text {
+        font-size: 1.05rem;
+        font-weight: 600;
+    }
+    .search-bar {
+        display: none; 
+    }
+    .search-icon-btn {
+        display: block; 
+        font-size: 1.3rem;
+        margin-left: auto;
+        margin-right: 6px;
+    }
+    .menu-btn {
+        display: block; 
+        font-size: 1.5rem;
+        margin-left: 0; 
+        z-index: 1060; /* CRITICAL FIX: Ensure button is above the menu panel */
+    }
+    
+    /* --- UPDATED SLIDE-IN MENU STYLES --- */
+
+    
+    /* NEW: Hide menu items initially */
+    .nav-links li {
+        opacity: 0;
+        transform: translateX(15px);
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    }
+
+    .nav-links.is-open {
+        transform: translateX(0);
+        visibility: visible; 
+        transition: transform 0.4s ease-out, visibility 0s;
+    }
+    
+    /* NEW: Staggered animation for menu items on open */
+    .nav-links.is-open li {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    /* You must apply these delays manually or via SCSS loop/JavaScript */
+    /* Example delays for 4 items: */
+    .nav-links.is-open li:nth-child(1) { transition-delay: 0.1s; }
+    .nav-links.is-open li:nth-child(2) { transition-delay: 0.15s; }
+    .nav-links.is-open li:nth-child(3) { transition-delay: 0.2s; }
+    .nav-links.is-open li:nth-child(4) { transition-delay: 0.25s; }
+    .nav-links.is-open li:nth-child(5) { transition-delay: 0.3s; }
+
+
+    /* ------------------------------------ */
+
+    .mobile-search-bar {
+        display: flex; 
+    }
+
+  .menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 1040; /* Just below menu-btn but above rest */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.nav-links a.active {
+  color: #ff0000;
+  text-shadow: 0 0 6px #ff0000;
+
+}
+
+
+
+.nav-links {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 70%;
+  max-width: 300px;
+  background: #1c1c1c;
+  box-shadow: -4px 0 10px rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+
+  /* 🧭 Center content vertically */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;     /* 👈 forces vertical centering */
+  align-items: flex-start;     /* 👈 keep links left-aligned */
+
+  padding: 40px 20px;
+  gap: 20px;
+
+  /* Animation */
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1), visibility 0.4s ease-out;
+}
+
+
+.nav-links li {
+  opacity: 0;
+  transform: translateX(15px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.nav-links.is-open li {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.nav-links.is-open li:nth-child(1) { transition-delay: 0.1s; }
+.nav-links.is-open li:nth-child(2) { transition-delay: 0.2s; }
+.nav-links.is-open li:nth-child(3) { transition-delay: 0.3s; }
+.nav-links.is-open li:nth-child(4) { transition-delay: 0.4s; }
+.nav-links.is-open li:nth-child(5) { transition-delay: 0.5s; }
+
+
+.nav-links.is-open li:nth-child(5) {
+  opacity: 1;
+  transform: translateY(0); /* 👈 come from bottom instead of side */
+  transition-delay: 0.5s;
+}
+.nav-links li:nth-child(5) {
+  transform: translateY(15px); /* initial offset down */
+}
+
+
+.menu-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0.15s;
+}
+}
+
+/* 🪶 Extra small (<= 400px) - REMAINING ORIGINAL STYLES */
+@media (max-width: 400px) {
+    .logo .logo-text {
+        font-size: 0.95rem;
+    }
+    .navlogo {
+        width: 26px;
+        height: 26px;
+    }
+    .search-icon-btn,
+    .menu-btn {
+        font-size: 1.2rem;
+    }
+}
+/* --- Hide top-right login button on mobile --- */
+@media (max-width: 720px) {
+  .auth-buttons {
+    display: none !important;
+  }
+}
+
+
+.auth-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.username {
+  color: #00aaff;
+  font-weight: 600;
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #00aaff;
+  color: #00aaff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #00aaff;
+  color: #fff;
+}
+
+
+/*login */
+
+/* === Search + Profile section === */
+.nav-right {
+  display: flex;
+  align-items: center;   
+  gap: 12px;   
+}
+
+/* ✅ fix: remove old flex from .search-bar */
+.nav-right .search-bar {
+  flex: none;
+  margin-right: 5px;
+  position: relative;
+  width: 100%;
+  width: 300px; 
+
+
+}
+
+
+.nav-right .search-bar input {
+  width: 100%;
+  border-radius: 18px;
+  padding: 8px 34px 8px 14px;
+  background: #2c2c2c;
+  color: #fff;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  left: 5px;
+}
+
+.nav-right .search-bar input:focus {
+  background: #3a3a3a;
+}
+
+/* 👤 Avatar alignment */
+.profile-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.avatar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #00aaff;
+  transition: 0.3s;
+}
+
+.avatar:hover {
+  transform: scale(1.06);
+  border-color: #fff;
+}
+
+/* 🔹 Login button styling */
+.login-btn {
+  background: #007bff;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.login-btn:hover {
+  background: #009dff;
+  transform: translateY(-1px);
+}
+
+/* 🧭 Fix alignment in nav-right */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.profile-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* 📱 Mobile view: keep login visible */
+@media (max-width: 720px) {
+  .nav-right {
+    gap: 6px;
+  }
+
+  .login-btn {
+    font-size: 0.85rem;
+    padding: 5px 12px;
+  }
+
+  /* make sure it's not hidden */
+  .auth-buttons {
+    display: flex !important;
+  }
+
+  /* reduce margin-left to avoid overflow */
+  .profile-container {
+    margin-left: 0;
+  }
+}
+
+
+  .desktop-only .profile-dropdown {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    min-width: 160px;
+    background: #1e1e1e;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+
+    padding: 10px 12px;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: all 0.25s ease;
+  }
+
+  /* ✅ When dropdown visible */
+  .desktop-only .profile-dropdown.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* 👋 Name */
+  .profile-dropdown .profile-name {
+    color: #00aaff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+
+  /* 🔘 Logout button */
+  .profile-dropdown .logout-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid #00aaff;
+    color: #00aaff;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .profile-dropdown .logout-btn:hover {
+    background: #00aaff;
+    color: #fff;
+  }
+
+
+.login-btn {
+  background: #00aaff;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.login-btn:hover {
+  background: #0088cc;
+}
+
+.profile-container {
+  position: relative;
+}
+
+.profile-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: #1e1e1e;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  z-index: 1000;
+}
+
+.profile-dropdown a,
+.profile-dropdown button {
+  color: white;
+  text-decoration: none;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: #00aaff33;
+}
+
+/* === Mobile Auth/Profile === */
+.mobile-auth {
+  margin-top: auto;
+  padding: 20px;
+  border-top: 1px solid #222;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-login-btn,
+.mobile-profile-btn,
+.mobile-logout-btn {
+  background: #00aaff;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  width: 100%;
+}
+
+.mobile-logout-btn {
+  background: #ff5555;
+}
+
+.mobile-login-btn:hover,
+.mobile-profile-btn:hover {
+  background: #0088cc;
+}
+
+.mobile-logout-btn:hover {
+  background: #dd4444;
+}
+
+/* mobile nav full height */
+.nav-links.is-open {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100vh;
+  overflow-y: auto;
+}
+/* ✅ Hide avatar/login button on mobile */
+@media (max-width: 720px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* === Desktop profile dropdown === */
+@media (min-width: 720px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+.profile-dropdown {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: all 0.25s ease;
+}
+
+.profile-dropdown.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+
+.profile-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border 0.3s;
+}
+
+.profile-avatar:hover {
+  border: 2px solid #e50914;
+}
+
+.profile-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 10px 0;
+  width: 220px;
+  display: none;
+  flex-direction: column;
+  text-align: left;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.25s ease;
+  z-index: 200;
+}
+
+.profile-menu.show {
+  display: flex;
+}
+
+.profile-menu a,
+.profile-menu button {
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  font-size: 14px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-menu a:hover,
+.profile-menu button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-menu .icon {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-menu.show .navlogout {
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.profile-menu .navlogout:hover {
+  color: #dd4444;
+
+}
+
+.profile-menu.show .nav-help {
+  color: #ffffff;
+  text-decoration: none;
+  
+}
+.profile-menu .nav-help:hover {
+  color: #00d8ff;
+}
+
+.profile-menu.show .navacc {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.profile-menu .navacc:hover {
+  color: #00d8ff;
+}
+
+.news-badge {
+  background: #e50914;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 1px 6px;
+  margin-left: 5px;
+
+}

@@ -1,0 +1,133 @@
+.player-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Loader */
+.player-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.2);
+  z-index: 5;
+}
+
+.player-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top-color: #e50914;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Controls Overlay */
+.player-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.9));
+  padding: 10px 20px;
+  transition: opacity 0.3s;
+  z-index: 10;
+}
+
+.player-hide { opacity: 0; pointer-events: none; }
+
+.player-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+.player-left, .player-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.player-left button, .player-right button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Progress Slider */
+.player-slider {
+  width: 100%;
+  height: 5px;
+  appearance: none;
+  background: rgba(255,255,255,0.2);
+  cursor: pointer;
+  outline: none;
+}
+
+.player-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #e50914 var(--progress), transparent var(--progress));
+}
+
+/* Quality & Subtitles */
+.player-quality { position: relative; }
+.quality-list {
+  position: absolute;
+  bottom: 150%;
+  right: 0;
+  background: rgba(0,0,0,0.9);
+  padding: 5px;
+  border-radius: 5px;
+  list-style: none;
+}
+
+.quality-list li {
+  padding: 5px 15px;
+  cursor: pointer;
+}
+
+.quality-list li:hover { background: #e50914; }
+
+.player-next-btn {
+  position: absolute;
+  right: 20px;
+  bottom: 80px;
+  background: #e50914;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.player-watermark {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  opacity: 0.5;
+  font-weight: bold;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .player-left, .player-right { gap: 10px; }
+  .player-left button, .player-right button { font-size: 15px; }
+  .player-time { font-size: 12px; }
+}
