@@ -184,15 +184,7 @@ app.use("/api/videos", historyRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/users", userRoutes);
-/* ============================================================
-   🔥 4. FRONTEND SERVE (React / Vite)
-   ============================================================ */
 
-app.use(express.static(path.join(__dirname, "../dist")));
-
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "../dist/index.html"));
-});
 
 /* ============================================================
    🔥 5. SERVER START
