@@ -192,73 +192,73 @@ const loginUser = async (req, res) => {
 };
 
 // --- (MODIFIED) Verify the Email OTP and Login ---
-const verifyEmailLogin = async (req, res) => {
-  try {
-    const { userId, token, timezone, ip: frontendIP } = req.body;
+// const verifyEmailLogin = async (req, res) => {
+//   try {
+//     const { userId, token, timezone, ip: frontendIP } = req.body;
 
-    const user = await User.findOne({
-      _id: userId,
-      loginOtp: token,
-      loginOtpExpires: { $gt: Date.now() },
-    });
+//     const user = await User.findOne({
+//       _id: userId,
+//       loginOtp: token,
+//       loginOtpExpires: { $gt: Date.now() },
+//     });
 
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired code." });
-    }
+//     if (!user) {
+//       return res.status(400).json({ message: "Invalid or expired code." });
+//     }
 
-    user.loginOtp = undefined;
-    user.loginOtpExpires = undefined;
+//     user.loginOtp = undefined;
+//     user.loginOtpExpires = undefined;
 
-    // Device Tracking
-    const parser = new UAParser(req.headers["user-agent"]);
-    const ua = parser.getResult();
-    const userAgent = `${ua.browser.name || "Browser"} on ${ua.os.name || "OS"}`;
+//     // Device Tracking
+//     const parser = new UAParser(req.headers["user-agent"]);
+//     const ua = parser.getResult();
+//     const userAgent = `${ua.browser.name || "Browser"} on ${ua.os.name || "OS"}`;
 
-    // IP detection
-    let ip =
-      frontendIP ||
-      req.headers["cf-connecting-ip"] ||
-      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-      req.socket?.remoteAddress ||
-      "Unknown IP";
+//     // IP detection
+//     let ip =
+//       frontendIP ||
+//       req.headers["cf-connecting-ip"] ||
+//       req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+//       req.socket?.remoteAddress ||
+//       "Unknown IP";
 
-    if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
-    if (ip === "::1") ip = "127.0.0.1";
+//     if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
+//     if (ip === "::1") ip = "127.0.0.1";
 
-    user.loggedDevices = user.loggedDevices || [];
+//     user.loggedDevices = user.loggedDevices || [];
 
-    user.loggedDevices.push({
-      deviceName: userAgent,
-      ip,
-      loggedInAt: new Date(),
-    });
+//     user.loggedDevices.push({
+//       deviceName: userAgent,
+//       ip,
+//       loggedInAt: new Date(),
+//     });
 
-    await user.save();
+//     await user.save();
 
-    // GEOIP
-    let location = "Unknown Location";
-    const geo = geoip.lookup(ip);
-    if (geo && geo.country) {
-      const city = geo.city || "Unknown City";
-      location = `${city}, ${geo.country}`;
-    }
+//     // GEOIP
+//     let location = "Unknown Location";
+//     const geo = geoip.lookup(ip);
+//     if (geo && geo.country) {
+//       const city = geo.city || "Unknown City";
+//       location = `${city}, ${geo.country}`;
+//     }
 
-    const userTimezone = timezone || "UTC";
-    const loginTime = new Date().toLocaleString("en-US", {
-      timeZone: userTimezone,
-    });
+//     const userTimezone = timezone || "UTC";
+//     const loginTime = new Date().toLocaleString("en-US", {
+//       timeZone: userTimezone,
+//     });
 
-    // Email alert
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+//     // Email alert
+//     try {
+//       const transporter = nodemailer.createTransport({
+//         host: process.env.EMAIL_HOST,
+//         port: process.env.EMAIL_PORT,
+//         secure: true,
+//         auth: {
+//           user: process.env.EMAIL_USER,
+//           pass: process.env.EMAIL_PASS,
+//         },
+//       });
 
 //       await transporter.sendMail({
 //         from: `"CartoonLK Security" <${process.env.EMAIL_USER}>`,
