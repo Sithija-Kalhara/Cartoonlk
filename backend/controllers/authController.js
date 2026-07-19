@@ -45,51 +45,51 @@ const registerUser = async (req, res) => {
       },
     });
 
-await transporter.sendMail({
-  from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
-  to: user.email,
-  subject: "Welcome to CartoonLK! Verify Your Email",
-  html: `
-  <div style="max-width:500px;margin:auto;background:#ffffff;border-radius:12px;
-  border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
+  // await transporter.sendMail({
+  //   from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+  //   to: user.email,
+  //   subject: "Welcome to CartoonLK! Verify Your Email",
+  //   html: `
+  //   <div style="max-width:500px;margin:auto;background:#ffffff;border-radius:12px;
+  //   border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
 
-    <!-- Header -->
-    <div style="background:#0A84FF;padding:20px 25px;color:#fff;text-align:center;">
-      <h2 style="margin:0;font-size:22px;"> Welcome to CartoonLK</h2>
-    </div>
+  //     <!-- Header -->
+  //     <div style="background:#0A84FF;padding:20px 25px;color:#fff;text-align:center;">
+  //       <h2 style="margin:0;font-size:22px;"> Welcome to CartoonLK</h2>
+  //     </div>
 
-    <!-- Body -->
-    <div style="padding:25px;color:#333;line-height:1.6;">
-      <p style="font-size:16px;margin-bottom:10px;">
-        Hi <strong>${user.name}</strong>,
-      </p>
+  //     <!-- Body -->
+  //     <div style="padding:25px;color:#333;line-height:1.6;">
+  //       <p style="font-size:16px;margin-bottom:10px;">
+  //         Hi <strong>${user.name}</strong>,
+  //       </p>
 
-      <p style="font-size:14px;margin-bottom:20px;">
-        Thanks for registering! Please click the button below to verify your email and activate your CartoonLK account.
-      </p>
+  //       <p style="font-size:14px;margin-bottom:20px;">
+  //         Thanks for registering! Please click the button below to verify your email and activate your CartoonLK account.
+  //       </p>
 
-      <div style="text-align:center;margin:25px 0;">
-        <a href="${verificationUrl}"
-           style="background:#4CAF50;color:white;padding:12px 20px;border-radius:8px;
-           text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
-           Verify Your Account
-        </a>
-      </div>
+  //       <div style="text-align:center;margin:25px 0;">
+  //         <a href="${verificationUrl}"
+  //           style="background:#4CAF50;color:white;padding:12px 20px;border-radius:8px;
+  //           text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
+  //           Verify Your Account
+  //         </a>
+  //       </div>
 
-      <p style="font-size:14px;color:#666;">
-        This verification link will expire in <strong>15 minutes</strong>.
-      </p>
-    </div>
+  //       <p style="font-size:14px;color:#666;">
+  //         This verification link will expire in <strong>15 minutes</strong>.
+  //       </p>
+  //     </div>
 
-    <!-- Footer -->
-    <div style="background:#f1f1f1;padding:12px;text-align:center;
-    font-size:11px;color:#777;">
-      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
-    </div>
+  //     <!-- Footer -->
+  //     <div style="background:#f1f1f1;padding:12px;text-align:center;
+  //     font-size:11px;color:#777;">
+  //       © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+  //     </div>
 
-  </div>
-  `,
-});
+  //   </div>
+  //   `,
+  // });
 
 
     res.status(201).json({
@@ -132,52 +132,52 @@ const loginUser = async (req, res) => {
       },
     });
 
-await transporter.sendMail({
-  from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
-  to: user.email,
-  subject: "Your CartoonLK Login Code",
-  html: `
-  <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;
-  border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
+// await transporter.sendMail({
+//   from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+//   to: user.email,
+//   subject: "Your CartoonLK Login Code",
+//   html: `
+//   <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;
+//   border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
 
-    <!-- Header -->
-    <div style="background:#0A84FF;padding:20px 25px;color:#fff;text-align:center;">
-      <h2 style="margin:0;font-size:22px;"> Your CartoonLK Login Code</h2>
-    </div>
+//     <!-- Header -->
+//     <div style="background:#0A84FF;padding:20px 25px;color:#fff;text-align:center;">
+//       <h2 style="margin:0;font-size:22px;"> Your CartoonLK Login Code</h2>
+//     </div>
 
-    <!-- Body -->
-    <div style="padding:25px;color:#333;text-align:center;">
-      <p style="font-size:15px;margin-bottom:15px;">
-        Here is your 6-digit login code.  
-        This code will expire in <strong>10 minutes</strong>.
-      </p>
+//     <!-- Body -->
+//     <div style="padding:25px;color:#333;text-align:center;">
+//       <p style="font-size:15px;margin-bottom:15px;">
+//         Here is your 6-digit login code.  
+//         This code will expire in <strong>10 minutes</strong>.
+//       </p>
 
-      <div style="
-        background:#f5f7ff;
-        padding:20px;
-        border-radius:10px;
-        margin:20px 0;
-        font-size:32px;
-        font-weight:bold;
-        color:#0A84FF;
-        letter-spacing:10px;">
-        ${otp}
-      </div>
+//       <div style="
+//         background:#f5f7ff;
+//         padding:20px;
+//         border-radius:10px;
+//         margin:20px 0;
+//         font-size:32px;
+//         font-weight:bold;
+//         color:#0A84FF;
+//         letter-spacing:10px;">
+//         ${otp}
+//       </div>
 
-      <p style="font-size:14px;color:#666;">
-        If you didn’t request this code, you can safely ignore this email.
-      </p>
-    </div>
+//       <p style="font-size:14px;color:#666;">
+//         If you didn’t request this code, you can safely ignore this email.
+//       </p>
+//     </div>
 
-    <!-- Footer -->
-    <div style="background:#f1f1f1;padding:12px;text-align:center;
-    font-size:11px;color:#777;">
-      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
-    </div>
+//     <!-- Footer -->
+//     <div style="background:#f1f1f1;padding:12px;text-align:center;
+//     font-size:11px;color:#777;">
+//       © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+//     </div>
 
-  </div>
-  `,
-});
+//   </div>
+//   `,
+// });
 
 
     return res.json({
@@ -260,38 +260,38 @@ const verifyEmailLogin = async (req, res) => {
         },
       });
 
-      await transporter.sendMail({
-        from: `"CartoonLK Security" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: "New Login Detected on Your CartoonLK Account",
-        html: `<p>New login detected...</p>`,
-      });
-    } catch (emailErr) {
-      console.error("Failed to send login email:", emailErr);
-    }
+//       await transporter.sendMail({
+//         from: `"CartoonLK Security" <${process.env.EMAIL_USER}>`,
+//         to: user.email,
+//         subject: "New Login Detected on Your CartoonLK Account",
+//         html: `<p>New login detected...</p>`,
+//       });
+//     } catch (emailErr) {
+//       console.error("Failed to send login email:", emailErr);
+//     }
 
-    // JWT with deviceId
-    const deviceId =
-      user.loggedDevices[user.loggedDevices.length - 1]._id.toString();
+//     // JWT with deviceId
+//     const deviceId =
+//       user.loggedDevices[user.loggedDevices.length - 1]._id.toString();
 
-    const authToken = jwt.sign(
-      { id: user._id, deviceId },
-      process.env.JWT_SECRET,
-      { expiresIn: "30d" }
-    );
+//     const authToken = jwt.sign(
+//       { id: user._id, deviceId },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "30d" }
+//     );
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      profilePic: user.profilePic || "",
-      token: authToken,
-    });
-  } catch (err) {
-    console.error("Email login verify error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+//     res.json({
+//       _id: user._id,
+//       name: user.name,
+//       email: user.email,
+//       profilePic: user.profilePic || "",
+//       token: authToken,
+//     });
+//   } catch (err) {
+//     console.error("Email login verify error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 
 
 
@@ -343,56 +343,56 @@ const resendVerificationEmail = async (req, res) => {
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
-   await transporter.sendMail({
-  from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
-  to: user.email,
-  subject: "CartoonLK - New Verification Link",
-  html: `
-  <div style="max-width:500px;margin:auto;background:#ffffff;border-radius:12px;
-  border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
+//    await transporter.sendMail({
+//   from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+//   to: user.email,
+//   subject: "CartoonLK - New Verification Link",
+//   html: `
+//   <div style="max-width:500px;margin:auto;background:#ffffff;border-radius:12px;
+//   border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
 
-    <!-- Header -->
-    <div style="background:#0A84FF;padding:20px 25px;color:white;text-align:center;">
-      <h2 style="margin:0;font-size:22px;">New Verification Link</h2>
-    </div>
+//     <!-- Header -->
+//     <div style="background:#0A84FF;padding:20px 25px;color:white;text-align:center;">
+//       <h2 style="margin:0;font-size:22px;">New Verification Link</h2>
+//     </div>
 
-    <!-- Body -->
-    <div style="padding:25px;color:#333;line-height:1.6;">
-      <p style="font-size:16px;margin-bottom:12px;">
-        Hi <strong>${user.name}</strong>,
-      </p>
+//     <!-- Body -->
+//     <div style="padding:25px;color:#333;line-height:1.6;">
+//       <p style="font-size:16px;margin-bottom:12px;">
+//         Hi <strong>${user.name}</strong>,
+//       </p>
 
-      <p style="font-size:14px;margin-bottom:22px;">
-        You requested a new verification link.  
-        Please click the button below to verify your CartoonLK account.
-      </p>
+//       <p style="font-size:14px;margin-bottom:22px;">
+//         You requested a new verification link.  
+//         Please click the button below to verify your CartoonLK account.
+//       </p>
 
-      <div style="text-align:center;margin:25px 0;">
-        <a href="${verificationUrl}"
-           style="background:#0A84FF;color:white;padding:12px 22px;border-radius:8px;
-           text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
-           Verify Your Account
-        </a>
-      </div>
+//       <div style="text-align:center;margin:25px 0;">
+//         <a href="${verificationUrl}"
+//            style="background:#0A84FF;color:white;padding:12px 22px;border-radius:8px;
+//            text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
+//            Verify Your Account
+//         </a>
+//       </div>
 
-      <p style="font-size:14px;color:#666;">
-        This link will expire in <strong>15 minutes</strong>.
-      </p>
+//       <p style="font-size:14px;color:#666;">
+//         This link will expire in <strong>15 minutes</strong>.
+//       </p>
 
-      <p style="font-size:13px;color:#999;margin-top:20px;">
-        If you didn’t request this, you can ignore this email safely.
-      </p>
-    </div>
+//       <p style="font-size:13px;color:#999;margin-top:20px;">
+//         If you didn’t request this, you can ignore this email safely.
+//       </p>
+//     </div>
 
-    <!-- Footer -->
-    <div style="background:#f1f1f1;padding:12px;text-align:center;
-    font-size:11px;color:#777;">
-      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
-    </div>
+//     <!-- Footer -->
+//     <div style="background:#f1f1f1;padding:12px;text-align:center;
+//     font-size:11px;color:#777;">
+//       © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+//     </div>
 
-  </div>
-  `,
-});
+//   </div>
+//   `,
+// });
 
 
     res.status(200).json({ message: "✅ New verification email sent. Please check your inbox." });
@@ -560,55 +560,55 @@ const requestPasswordReset = async (req, res) => {
       secure: true,
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
    });
-   await transporter.sendMail({
-  from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
-  to: user.email,
-  subject: "Password Reset Code",
-  html: `
-  <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;
-  border:1px solid #e0e0e0;font-family:Arial, sans-serif;overflow:hidden;">
+//    await transporter.sendMail({
+//   from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+//   to: user.email,
+//   subject: "Password Reset Code",
+//   html: `
+//   <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;
+//   border:1px solid #e0e0e0;font-family:Arial, sans-serif;overflow:hidden;">
 
-    <!-- Header -->
-    <div style="background:#FF3B30;padding:20px 25px;color:white;text-align:center;">
-      <h2 style="margin:0;font-size:22px;">Password Reset Request</h2>
-    </div>
+//     <!-- Header -->
+//     <div style="background:#FF3B30;padding:20px 25px;color:white;text-align:center;">
+//       <h2 style="margin:0;font-size:22px;">Password Reset Request</h2>
+//     </div>
 
-    <!-- Body -->
-    <div style="padding:25px;color:#333;text-align:center;line-height:1.6;">
-      <p style="font-size:15px;margin-bottom:10px;">
-        Your verification code is:
-      </p>
+//     <!-- Body -->
+//     <div style="padding:25px;color:#333;text-align:center;line-height:1.6;">
+//       <p style="font-size:15px;margin-bottom:10px;">
+//         Your verification code is:
+//       </p>
 
-      <div style="
-        background:#fff5f5;
-        padding:20px;
-        border-radius:10px;
-        margin:20px 0;
-        font-size:34px;
-        font-weight:bold;
-        color:#FF3B30;
-        letter-spacing:10px;">
-        ${otp}
-      </div>
+//       <div style="
+//         background:#fff5f5;
+//         padding:20px;
+//         border-radius:10px;
+//         margin:20px 0;
+//         font-size:34px;
+//         font-weight:bold;
+//         color:#FF3B30;
+//         letter-spacing:10px;">
+//         ${otp}
+//       </div>
 
-      <p style="font-size:14px;color:#666;">
-        This code will expire in <strong>10 minutes</strong>.
-      </p>
+//       <p style="font-size:14px;color:#666;">
+//         This code will expire in <strong>10 minutes</strong>.
+//       </p>
 
-      <p style="font-size:13px;color:#999;margin-top:18px;">
-        If you didn’t request this password reset, you can safely ignore this email.
-      </p>
-    </div>
+//       <p style="font-size:13px;color:#999;margin-top:18px;">
+//         If you didn’t request this password reset, you can safely ignore this email.
+//       </p>
+//     </div>
 
-    <!-- Footer -->
-    <div style="background:#f3f3f3;padding:12px;text-align:center;
-    font-size:11px;color:#777;">
-      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
-    </div>
+//     <!-- Footer -->
+//     <div style="background:#f3f3f3;padding:12px;text-align:center;
+//     font-size:11px;color:#777;">
+//       © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+//     </div>
 
-  </div>
-  `,
-});
+//   </div>
+//   `,
+// });
 
     res.json({ message: "✅ Verification code sent to your email" });
   } catch (err) {

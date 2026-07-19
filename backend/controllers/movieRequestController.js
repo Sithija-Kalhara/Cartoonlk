@@ -21,7 +21,7 @@ const createMovieRequest = async (req, res) => {
 
     console.log("🎬 Saved request, sending email…");
 
-    const info = await transporter.sendMail({
+    const info = ({
       from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
       to: "sithijakalhara2@gmail.com",
       subject: "🎬 New Movie Request",
