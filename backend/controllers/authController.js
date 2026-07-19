@@ -6,15 +6,17 @@ const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const r2 = require("../config/r2");
 const User = require("../models/User");
 const UAParser = require("ua-parser-js");
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
-const geoip = require('geoip-lite');
+const geoip = require("geoip-lite");
+
+// ✅ Centralized, verified transporter (mama hadapu config/mailer.js eken)
+const transporter = require("../config/mailer");
 
 // 🔐 Generate token
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
-// --- REGISTER USER ---
+// --- (Functions registerUser, loginUser are unchanged) ---
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -33,6 +35,62 @@ const registerUser = async (req, res) => {
     user.verificationExpires = Date.now() + 1000 * 60 * 15;
     await user.save();
 
+    const verificationUrl = `${process.env.BACKEND_URL}/api/auth/verify-email?token=${token}`;
+
+    const mailResult = await transporter.sendMail({
+      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Welcome to CartoonLK! Verify Your Email",
+      html: `
+  <div style="max-width:500px;margin:auto;background:#ffffff;border-radius:12px;
+  border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:#0A84FF;padding:20px 25px;color:#fff;text-align:center;">
+      <h2 style="margin:0;font-size:22px;"> Welcome to CartoonLK</h2>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:25px;color:#333;line-height:1.6;">
+      <p style="font-size:16px;margin-bottom:10px;">
+        Hi <strong>${user.name}</strong>,
+      </p>
+
+      <p style="font-size:14px;margin-bottom:20px;">
+        Thanks for registering! Please click the button below to verify your email and activate your CartoonLK account.
+      </p>
+
+      <div style="text-align:center;margin:25px 0;">
+        <a href="${verificationUrl}"
+           style="background:#4CAF50;color:white;padding:12px 20px;border-radius:8px;
+           text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
+           Verify Your Account
+        </a>
+      </div>
+
+      <p style="font-size:14px;color:#666;">
+        This verification link will expire in <strong>15 minutes</strong>.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f1f1f1;padding:12px;text-align:center;
+    font-size:11px;color:#777;">
+      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+    </div>
+
+  </div>
+  `,
+    });
+
+    console.log("📧 Mail sent result:", {
+      messageId: mailResult.messageId,
+      accepted: mailResult.accepted,
+      rejected: mailResult.rejected,
+      response: mailResult.response,
+      to: user.email,
+    });
+
     res.status(201).json({
       message: "✅ Registered! Please check your email to verify your account.",
     });
@@ -42,7 +100,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-// --- LOGIN USER ---
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -55,7 +112,7 @@ const loginUser = async (req, res) => {
     if (!user.isVerified) {
       return res.status(401).json({
         message: "❌ Please verify your email before logging in.",
-        resend: true, 
+        resend: true,
       });
     }
 
@@ -64,18 +121,64 @@ const loginUser = async (req, res) => {
     user.loginOtpExpires = Date.now() + 1000 * 60 * 10;
     await user.save();
 
+    await transporter.sendMail({
+      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Your CartoonLK Login Code",
+      html: `
+  <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;
+  border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:#0A84FF;padding:20px 25px;color:#fff;text-align:center;">
+      <h2 style="margin:0;font-size:22px;"> Your CartoonLK Login Code</h2>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:25px;color:#333;text-align:center;">
+      <p style="font-size:15px;margin-bottom:15px;">
+        Here is your 6-digit login code.
+        This code will expire in <strong>10 minutes</strong>.
+      </p>
+
+      <div style="
+        background:#f5f7ff;
+        padding:20px;
+        border-radius:10px;
+        margin:20px 0;
+        font-size:32px;
+        font-weight:bold;
+        color:#0A84FF;
+        letter-spacing:10px;">
+        ${otp}
+      </div>
+
+      <p style="font-size:14px;color:#666;">
+        If you didn’t request this code, you can safely ignore this email.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f1f1f1;padding:12px;text-align:center;
+    font-size:11px;color:#777;">
+      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+    </div>
+
+  </div>
+  `,
+    });
+
     return res.json({
       otpRequired: true,
       userId: user._id,
     });
-    
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// --- VERIFY EMAIL LOGIN (OTP VERIFICATION) ---
+// --- (MODIFIED) Verify the Email OTP and Login ---
 const verifyEmailLogin = async (req, res) => {
   try {
     const { userId, token, timezone, ip: frontendIP } = req.body;
@@ -132,8 +235,21 @@ const verifyEmailLogin = async (req, res) => {
       timeZone: userTimezone,
     });
 
+    // Email alert
+    try {
+      await transporter.sendMail({
+        from: `"CartoonLK Security" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "New Login Detected on Your CartoonLK Account",
+        html: `<p>New login detected...</p>`,
+      });
+    } catch (emailErr) {
+      console.error("Failed to send login email:", emailErr);
+    }
+
     // JWT with deviceId
-    const deviceId = user.loggedDevices[user.loggedDevices.length - 1]._id.toString();
+    const deviceId =
+      user.loggedDevices[user.loggedDevices.length - 1]._id.toString();
 
     const authToken = jwt.sign(
       { id: user._id, deviceId },
@@ -141,21 +257,20 @@ const verifyEmailLogin = async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    return res.json({
+    res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       profilePic: user.profilePic || "",
       token: authToken,
     });
-
   } catch (err) {
     console.error("Email login verify error:", err);
-    return res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// --- VERIFY EMAIL ---
+// --- (All other functions are unchanged) ---
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
@@ -177,7 +292,6 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-// --- RESEND VERIFICATION EMAIL ---
 const resendVerificationEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -195,6 +309,59 @@ const resendVerificationEmail = async (req, res) => {
     user.verificationExpires = Date.now() + 1000 * 60 * 15;
     await user.save();
 
+    const verificationUrl = `${process.env.BACKEND_URL}/api/auth/verify-email?token=${token}`;
+
+    await transporter.sendMail({
+      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "CartoonLK - New Verification Link",
+      html: `
+  <div style="max-width:500px;margin:auto;background:#ffffff;border-radius:12px;
+  border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:#0A84FF;padding:20px 25px;color:white;text-align:center;">
+      <h2 style="margin:0;font-size:22px;">New Verification Link</h2>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:25px;color:#333;line-height:1.6;">
+      <p style="font-size:16px;margin-bottom:12px;">
+        Hi <strong>${user.name}</strong>,
+      </p>
+
+      <p style="font-size:14px;margin-bottom:22px;">
+        You requested a new verification link.
+        Please click the button below to verify your CartoonLK account.
+      </p>
+
+      <div style="text-align:center;margin:25px 0;">
+        <a href="${verificationUrl}"
+           style="background:#0A84FF;color:white;padding:12px 22px;border-radius:8px;
+           text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
+           Verify Your Account
+        </a>
+      </div>
+
+      <p style="font-size:14px;color:#666;">
+        This link will expire in <strong>15 minutes</strong>.
+      </p>
+
+      <p style="font-size:13px;color:#999;margin-top:20px;">
+        If you didn’t request this, you can ignore this email safely.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f1f1f1;padding:12px;text-align:center;
+    font-size:11px;color:#777;">
+      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+    </div>
+
+  </div>
+  `,
+    });
+
     res.status(200).json({ message: "✅ New verification email sent. Please check your inbox." });
   } catch (err) {
     console.error("Resend verification error:", err);
@@ -202,7 +369,6 @@ const resendVerificationEmail = async (req, res) => {
   }
 };
 
-// --- LOGOUT ALL DEVICES ---
 const logoutAllDevices = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -218,7 +384,6 @@ const logoutAllDevices = async (req, res) => {
   }
 };
 
-// --- LOGOUT SINGLE DEVICE ---
 const logoutSingleDevice = async (req, res) => {
   try {
     const { userId, deviceId } = req.params;
@@ -235,7 +400,6 @@ const logoutSingleDevice = async (req, res) => {
   }
 };
 
-// --- UPLOAD PROFILE PICTURE ---
 const uploadProfilePic = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -266,7 +430,6 @@ const uploadProfilePic = async (req, res) => {
   }
 };
 
-// --- UPDATE PROFILE ---
 const updateProfile = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -283,7 +446,6 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// --- CHANGE PASSWORD ---
 const changePassword = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -302,7 +464,6 @@ const changePassword = async (req, res) => {
   }
 };
 
-// --- GET USER PREFERENCES ---
 const getUserPreferences = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -339,7 +500,6 @@ const getUserPreferences = async (req, res) => {
   }
 };
 
-// --- GET LOGGED DEVICES ---
 const getDevices = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -352,7 +512,6 @@ const getDevices = async (req, res) => {
   }
 };
 
-// --- REQUEST PASSWORD RESET ---
 const requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
@@ -362,7 +521,57 @@ const requestPasswordReset = async (req, res) => {
     user.resetToken = otp;
     user.resetTokenExpiry = Date.now() + 1000 * 60 * 10;
     await user.save();
-    
+
+    await transporter.sendMail({
+      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Password Reset Code",
+      html: `
+  <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;
+  border:1px solid #e0e0e0;font-family:Arial, sans-serif;overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:#FF3B30;padding:20px 25px;color:white;text-align:center;">
+      <h2 style="margin:0;font-size:22px;">Password Reset Request</h2>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:25px;color:#333;text-align:center;line-height:1.6;">
+      <p style="font-size:15px;margin-bottom:10px;">
+        Your verification code is:
+      </p>
+
+      <div style="
+        background:#fff5f5;
+        padding:20px;
+        border-radius:10px;
+        margin:20px 0;
+        font-size:34px;
+        font-weight:bold;
+        color:#FF3B30;
+        letter-spacing:10px;">
+        ${otp}
+      </div>
+
+      <p style="font-size:14px;color:#666;">
+        This code will expire in <strong>10 minutes</strong>.
+      </p>
+
+      <p style="font-size:13px;color:#999;margin-top:18px;">
+        If you didn’t request this password reset, you can safely ignore this email.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f3f3f3;padding:12px;text-align:center;
+    font-size:11px;color:#777;">
+      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+    </div>
+
+  </div>
+  `,
+    });
+
     res.json({ message: "✅ Verification code sent to your email" });
   } catch (err) {
     console.error("Forgot password error:", err);
@@ -370,7 +579,6 @@ const requestPasswordReset = async (req, res) => {
   }
 };
 
-// --- VERIFY RESET CODE ---
 const verifyResetCode = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -395,7 +603,6 @@ const verifyResetCode = async (req, res) => {
   }
 };
 
-// --- RESET PASSWORD ---
 const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
