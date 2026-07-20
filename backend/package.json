@@ -24,6 +24,7 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.10",
     "qrcode": "^1.5.4",
+    "resend": "^6.17.2",
     "speakeasy": "^2.0.0",
     "ua-parser-js": "^2.0.6"
   }

@@ -22,7 +22,7 @@ const createMovieRequest = async (req, res) => {
     console.log("🎬 Saved request, sending email…");
 
     const info = ({
-      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      from: `"CartoonLK <onboarding@resend.dev>`,
       to: "sithijakalhara2@gmail.com",
       subject: "🎬 New Movie Request",
       html: `

@@ -9,7 +9,6 @@ const UAParser = require("ua-parser-js");
 const crypto = require("crypto");
 const geoip = require("geoip-lite");
 
-// ✅ Centralized, verified transporter (mama hadapu config/mailer.js eken)
 const transporter = require("../config/mailer");
 
 // 🔐 Generate token
@@ -38,7 +37,7 @@ const registerUser = async (req, res) => {
     const verificationUrl = `${process.env.BACKEND_URL}/api/auth/verify-email?token=${token}`;
 
     const mailResult = await transporter.sendMail({
-      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      from: `"CartoonLK <onboarding@resend.dev>`,
       to: user.email,
       subject: "Welcome to CartoonLK! Verify Your Email",
       html: `
@@ -138,7 +137,7 @@ const loginUser = async (req, res) => {
     // 5. ඊමේල් එක යැවීම (Try-Catch එකක් ඇතුළේ සර්වර් එක ක්‍රෑෂ් නොවෙන්න)
     try {
       await transporter.sendMail({
-        from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+        from: `"CartoonLK <onboarding@resend.dev>`,
         to: user.email,
         subject: "Your CartoonLK Login Code",
         html: `
@@ -313,7 +312,7 @@ const resendVerificationEmail = async (req, res) => {
     const verificationUrl = `${process.env.BACKEND_URL}/api/auth/verify-email?token=${token}`;
 
     await transporter.sendMail({
-      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      from: `"CartoonLK <onboarding@resend.dev>`,
       to: user.email,
       subject: "CartoonLK - New Verification Link",
       html: `
@@ -524,7 +523,7 @@ const requestPasswordReset = async (req, res) => {
     await user.save();
 
     await transporter.sendMail({
-      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      from: `"CartoonLK <onboarding@resend.dev>`,
       to: user.email,
       subject: "Password Reset Code",
       html: `
