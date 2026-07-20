@@ -296,58 +296,79 @@ const verifyEmail = async (req, res) => {
 const resendVerificationEmail = async (req, res) => {
   try {
     const { email } = req.body;
-
-    // 1. User කෙනෙක් ඉන්නවාද කියලා බලනවා
     const user = await User.findOne({ email });
+
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({ message: "User not found" });
     }
-
-    // 2. දැනටමත් Verify වෙලා නම් ආයෙ යවන්න ඕනෙ නෑ
     if (user.isVerified) {
-      return res.status(400).json({ message: "This account is already verified. Please login." });
+      return res.status(400).json({ message: "This account is already verified." });
     }
 
-    // 3. අලුත්Verification Token එකක් (නැත්නම් OTP එකක්) හදනවා
-    // (ඔයා Register වෙද්දී හැදුවේ වෙනම token එකක් නම් ඒ logic එක මෙතනට දාන්න)
-    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Database එකේ user ගේVerification field එක update කරනවා
-    user.verificationToken = verificationToken; 
-    user.verificationTokenExpires = Date.now() + 1000 * 60 * 24; // පැය 24ක්
+    const token = crypto.randomBytes(32).toString("hex");
+    user.verificationToken = token;
+    user.verificationExpires = Date.now() + 1000 * 60 * 15;
     await user.save();
 
-    // 4. Verification ඊමේල් එක යැවීම
-    try {
-      await transporter.sendMail({
-        from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: "Verify your CartoonLK Account",
-        html: `
-        <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;border:1px solid #e5e5e5;font-family:Arial, sans-serif;padding:25px;text-align:center;">
-          <h2 style="color:#0A84FF;margin-top:0;">Welcome to CartoonLK!</h2>
-          <p>Please use the following code to verify your email address:</p>
-          <div style="background:#f5f7ff;padding:15px;border-radius:10px;font-size:32px;font-weight:bold;color:#0A84FF;letter-spacing:8px;margin:20px 0;">
-            ${verificationToken}
-          </div>
-          <p style="font-size:12px;color:#777;">This code will expire in 24 hours.</p>
-        </div>`,
-      });
+    const verificationUrl = `${process.env.BACKEND_URL}/api/auth/verify-email?token=${token}`;
 
-      return res.json({ message: "Verification email resent successfully! Please check your inbox." });
-    } catch (mailErr) {
-      console.error("Mail send error:", mailErr);
-      return res.status(500).json({ message: "Failed to send email. Try again later." });
-    }
+    await transporter.sendMail({
+      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "CartoonLK - New Verification Link",
+      html: `
+  <div style="max-width:500px;margin:auto;background:#ffffff;border-radius:12px;
+  border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
 
+    <!-- Header -->
+    <div style="background:#0A84FF;padding:20px 25px;color:white;text-align:center;">
+      <h2 style="margin:0;font-size:22px;">New Verification Link</h2>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:25px;color:#333;line-height:1.6;">
+      <p style="font-size:16px;margin-bottom:12px;">
+        Hi <strong>${user.name}</strong>,
+      </p>
+
+      <p style="font-size:14px;margin-bottom:22px;">
+        You requested a new verification link.
+        Please click the button below to verify your CartoonLK account.
+      </p>
+
+      <div style="text-align:center;margin:25px 0;">
+        <a href="${verificationUrl}"
+           style="background:#0A84FF;color:white;padding:12px 22px;border-radius:8px;
+           text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
+           Verify Your Account
+        </a>
+      </div>
+
+      <p style="font-size:14px;color:#666;">
+        This link will expire in <strong>15 minutes</strong>.
+      </p>
+
+      <p style="font-size:13px;color:#999;margin-top:20px;">
+        If you didn’t request this, you can ignore this email safely.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f1f1f1;padding:12px;text-align:center;
+    font-size:11px;color:#777;">
+      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+    </div>
+
+  </div>
+  `,
+    });
+
+    res.status(200).json({ message: "✅ New verification email sent. Please check your inbox." });
   } catch (err) {
     console.error("Resend verification error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-// export කරන්න අමතක කරන්න එපා
-module.exports = { loginUser, resendVerificationEmail, ... };
 
 const logoutAllDevices = async (req, res) => {
   try {
