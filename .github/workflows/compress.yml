@@ -1,0 +1,44 @@
+name: Free Video Encoder
+
+on:
+  repository_dispatch:
+    types: [compress_video] 
+
+jobs:
+  encode:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install FFmpeg & jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install ffmpeg jq -y
+
+      - name: Download Video using Streaming Server
+        run: |
+          STREAM_URL="https://cartoonlk-stream.onrender.com/stream/${{ github.event.client_payload.channel_id }}/${{ github.event.client_payload.message_id }}"
+          
+          echo "Downloading from: $STREAM_URL"
+          curl -L "$STREAM_URL" -o original_video.mp4
+
+      - name: Compress Video to 480p
+        run: |
+          ffmpeg -i original_video.mp4 -vf scale=-2:480 -c:v libx264 -crf 28 -preset fast compressed_480p.mp4
+
+      - name: Upload to Telegram & Update Main Backend Database
+        run: |
+          RESPONSE=$(curl -s -F "chat_id=${{ secrets.TELEGRAM_CHANNEL_ID }}" \
+                             -F "video=@compressed_480p.mp4" \
+                             -F "caption=🎬 Compressed 480p Version | Source ID: ${{ github.event.client_payload.message_id }}" \
+                             https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendVideo)
+
+          NEW_MESSAGE_ID=$(echo $RESPONSE | jq '.result.message_id')
+          
+          echo "New Telegram Message ID: $NEW_MESSAGE_ID"
+
+          curl -X POST -H "Content-Type: application/json" \
+               -d "{\"originalMessageId\": \"${{ github.event.client_payload.message_id }}\", \"compressedMessageId\": \"$NEW_MESSAGE_ID\"}" \
+               https://api.cartoonlk.com/api/videos/update-compressed-id
