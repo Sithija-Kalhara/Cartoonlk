@@ -103,12 +103,16 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // 1. User ඉන්නවාද කියලා බලනවා
     let user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
+    // 2. පාස්වර්ඩ් එක මැච් වෙනවාද බලනවා
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
+    // 3. වෙරිෆයි කරලා නැත්නම් Frontend එකට කියනවා බටන් එක පෙන්වන්න කියලා
     if (!user.isVerified) {
       return res.status(401).json({
         message: "❌ Please verify your email before logging in.",
@@ -116,62 +120,59 @@ const loginUser = async (req, res) => {
       });
     }
 
+    // 4. OTP එක හදනවා
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.loginOtp = otp;
-    user.loginOtpExpires = Date.now() + 1000 * 60 * 10;
-    await user.save();
+    
+    // ⭐ [CRITICAL FIX]: පාස්වර්ඩ් එක ආයෙත් hash වීම වැළැක්වීමට 
+    // .updateOne() එකක් පාවිච්චි කරලා කෙලින්ම Database එකට OTP එක විතරක් යවනවා.
+    await User.updateOne(
+      { _id: user._id },
+      { 
+        $set: { 
+          loginOtp: otp, 
+          loginOtpExpires: Date.now() + 1000 * 60 * 10 
+        } 
+      }
+    );
 
-    await transporter.sendMail({
-      from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Your CartoonLK Login Code",
-      html: `
-  <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;
-  border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
-
-    <!-- Header -->
-    <div style="background:#0A84FF;padding:20px 25px;color:#fff;text-align:center;">
-      <h2 style="margin:0;font-size:22px;"> Your CartoonLK Login Code</h2>
-    </div>
-
-    <!-- Body -->
-    <div style="padding:25px;color:#333;text-align:center;">
-      <p style="font-size:15px;margin-bottom:15px;">
-        Here is your 6-digit login code.
-        This code will expire in <strong>10 minutes</strong>.
-      </p>
-
-      <div style="
-        background:#f5f7ff;
-        padding:20px;
-        border-radius:10px;
-        margin:20px 0;
-        font-size:32px;
-        font-weight:bold;
-        color:#0A84FF;
-        letter-spacing:10px;">
-        ${otp}
+    // 5. ඊමේල් එක යැවීම (Try-Catch එකක් ඇතුළේ සර්වර් එක ක්‍රෑෂ් නොවෙන්න)
+    try {
+      await transporter.sendMail({
+        from: `"CartoonLK" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Your CartoonLK Login Code",
+        html: `
+    <div style="max-width:480px;margin:auto;background:#ffffff;border-radius:12px;
+    border:1px solid #e5e5e5;font-family:Arial, sans-serif;overflow:hidden;">
+      <div style="background:#0A84FF;padding:20px 25px;color:#fff;text-align:center;">
+        <h2 style="margin:0;font-size:22px;"> Your CartoonLK Login Code</h2>
       </div>
+      <div style="padding:25px;color:#333;text-align:center;">
+        <p style="font-size:15px;margin-bottom:15px;">
+          Here is your 6-digit login code. This code will expire in <strong>10 minutes</strong>.
+        </p>
+        <div style="background:#f5f7ff;padding:20px;border-radius:10px;margin:20px 0;font-size:34px;font-weight:bold;color:#0A84FF;letter-spacing:10px;">
+          ${otp}
+        </div>
+        <p style="font-size:14px;color:#666;">If you didn’t request this code, you can safely ignore this email.</p>
+      </div>
+      <div style="background:#f1f1f1;padding:12px;text-align:center;font-size:11px;color:#777;">
+        © ${new Date().getFullYear()} CartoonLK. All rights reserved.
+      </div>
+    </div>`,
+      });
+    } catch (mailErr) {
+      console.error("❌ Login OTP Mail Send Error:", mailErr);
+      // සර්වර් එක ක්‍රෑෂ් කරන්නේ නැතුව Frontend එකට මේල් එක යවන්න බැරි වුණා කියලා කියනවා
+      return res.status(500).json({ message: "Failed to send OTP email. Please try again." });
+    }
 
-      <p style="font-size:14px;color:#666;">
-        If you didn’t request this code, you can safely ignore this email.
-      </p>
-    </div>
-
-    <!-- Footer -->
-    <div style="background:#f1f1f1;padding:12px;text-align:center;
-    font-size:11px;color:#777;">
-      © ${new Date().getFullYear()} CartoonLK. All rights reserved.
-    </div>
-
-  </div>
-  `,
-    });
-
+    // 6. සාර්ථක නම් Frontend එකට Response එක දෙනවා
     return res.json({
       otpRequired: true,
       userId: user._id,
     });
+
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });
