@@ -12,7 +12,7 @@ export default function Auth() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [message, setMessage] = useState({ text: "", type: "" });
 
-  // --- OTP states ---
+  // --- NEW: OTP states (replaces 2FA states) ---
   const [showOtpForm, setShowOtpForm] = useState(false);
   const [otpToken, setOtpToken] = useState("");
   const [tempUserId, setTempUserId] = useState(null);
@@ -23,7 +23,6 @@ export default function Auth() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // 🔔 URL එකෙන් එන Verification සාර්ථකද කියලා චෙක් කරන කොටස (Vercel Fix)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("verified") === "true") {
@@ -31,7 +30,6 @@ export default function Auth() {
         text: "✅ Email verified successfully! Please log in.",
         type: "success",
       });
-      // URL එක ක්ලීන් කරනවා පේජ් එක රීලෝඩ් වුණත් මැසේජ් එක නැති නොවෙන්න
       window.history.replaceState(null, null, window.location.pathname);
     }
   }, []);
@@ -39,7 +37,6 @@ export default function Auth() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  // 🚀 Login සහ Register සබ්මිට් කිරීම
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage({ text: "", type: "" });
@@ -48,15 +45,17 @@ export default function Auth() {
       const endpoint = mode === "login" ? "/login" : "/register";
       const res = await axios.post(`${BASE}/api/auth${endpoint}`, form);
 
+      // --- NEW: Check for Email OTP ---
       if (mode === "login" && res.data.otpRequired) {
         setTempUserId(res.data.userId);
-        setShowOtpForm(true); // OTP Form එක පෙන්වන්න
+        setShowOtpForm(true); // Show the OTP form
         setMessage({ text: "Check your email for a 6-digit code.", type: "success" });
       } else if (mode === "login") {
+        // Fallback for some reason, but should not be hit
         login(res.data);
         navigate("/");
       } else {
-        // Registration සාර්ථක වූ විට
+        // Registration success
         setMessage({ text: res.data.message, type: "success" });
         setForm({ name: "", email: "", password: "" });
       }
@@ -64,54 +63,57 @@ export default function Auth() {
       const errorMsg = err.response?.data?.message || "❌ Something went wrong!";
       setMessage({ text: errorMsg, type: "error" });
 
-      // ⚠️ වෙරිෆයි කරලා නැතිනම් විතරක් Resend බටන් එක පෙන්වන්න
+      // Check for the "Please verify" error to show resend button
       if (mode === "login" && err.response?.data?.resend) {
         setShowResend(true);
       }
     }
   };
 
-  // 🔑 OTP (6-Digit) සබ්මිට් කිරීම
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
-    if (!tempUserId || !otpToken) {
-      setMessage({ text: "Invalid request", type: "error" });
-      return;
-    }
+  // --- NEW: Handle OTP Submit (replaces handle2FASubmit) ---
+const handleOtpSubmit = async (e) => {
+  e.preventDefault();
+  if (!tempUserId || !otpToken) {
+    setMessage({ text: "Invalid request", type: "error" });
+    return;
+  }
 
-    try {
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const realIp = await getRealIP();
+  try {
+    // Get timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      const res = await axios.post(`${BASE}/api/auth/login-verify-email`, {
-        userId: tempUserId,
-        token: otpToken,
-        timezone,
-        ip: realIp, 
-      });
+    // ⭐ Get REAL IPv4 from API
+    const realIp = await getRealIP();
 
-      login(res.data);
-      navigate("/");
-    } catch (err) {
-      setMessage({
-        text: err.response?.data?.message || "❌ Invalid or expired code!",
-        type: "error",
-      });
-    }
-  };
+    const res = await axios.post(`${BASE}/api/auth/login-verify-email`, {
+      userId: tempUserId,
+      token: otpToken,
+      timezone,
+      ip: realIp, 
+    });
 
-  // 🌐 IP එක ගන්නා කොටස
-  const getRealIP = async () => {
-    try {
-      const res = await fetch("https://api.ipify.org?format=json");
-      const data = await res.json();
-      return data.ip;
-    } catch {
-      return null;
-    }
-  };
+    login(res.data);
+    navigate("/");
+  } catch (err) {
+    setMessage({
+      text: err.response?.data?.message || "❌ Invalid or expired code!",
+      type: "error",
+    });
+  }
+};
 
-  // 🔄 Login <-> Register මාරු වීම
+
+      const getRealIP = async () => {
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+    return data.ip; // Real public IPv4
+  } catch {
+    return null;
+  }
+};
+
+
   const switchMode = () => {
     setMode(mode === "login" ? "register" : "login");
     setMessage({ text: "", type: "" });
@@ -122,7 +124,7 @@ export default function Auth() {
     setShowResend(false);
   };
 
-  // 🔁 පරණ "Resend Verification Email" ක්‍රියාවලිය (Fixes UI state to show OTP)
+  // --- Resend Email Handler (for registration) ---
   const handleResend = async () => {
     if (!form.email) {
       setMessage({ text: "Please enter your email in the field above.", type: "error" });
@@ -133,15 +135,8 @@ export default function Auth() {
       const res = await axios.post(`${BASE}/api/auth/resend-verify`, {
         email: form.email,
       });
-      
       setMessage({ text: res.data.message, type: "success" });
-      setShowResend(false);
-
-      // Backend එකෙන් OTP එකක් එවලා userId එකක් ආවොත් කෙලින්ම OTP Form එකට දානවා
-      if (res.data.userId) {
-        setTempUserId(res.data.userId);
-        setShowOtpForm(true);
-      }
+      setShowResend(false); // Hide button after success
     } catch (err) {
       setMessage({
         text: err.response?.data?.message || "Error resending email.",
@@ -149,6 +144,8 @@ export default function Auth() {
       });
     }
   };
+
+  
 
   return (
     <div className="auth-page-wrapper">
@@ -162,72 +159,81 @@ export default function Auth() {
           <p className="brand-subtitle">Watch your world in Sinhala 🎬</p>
         </div>
 
-        {showOtpForm ? (
-          /* --- OTP Input Form --- */
-          <form className="auth-form" onSubmit={handleOtpSubmit}>
-            <h2>Check Your Email</h2>
+          {showOtpForm ? (
+            <form className="auth-form" onSubmit={handleOtpSubmit}>
+              <h2>Check Your Email</h2>
 
-            {message.text && (
-              <p className={`message ${message.type}`}>{message.text}</p>
-            )}
+              {message.text && (
+                <p className={`message ${message.type}`}>{message.text}</p>
+              )}
 
-            <input
-              type="text"
-              name="otpToken"
-              placeholder="6-digit code from email"
-              value={otpToken}
-              onChange={(e) => setOtpToken(e.target.value)}
-              required
-              autoFocus
-              maxLength="6"
-            />
+              <input
+                type="text"
+                name="otpToken"
+                placeholder="6-digit code from email"
+                value={otpToken}
+                onChange={(e) => setOtpToken(e.target.value)}
+                required
+                autoFocus
+                maxLength="6"
+              />
 
-            <button type="submit">Verify & Login</button>
+              <button type="submit">Verify & Login</button>
 
-            {/* 🔁 RESEND OTP CODE INSIDE OTP FORM */}
-            <button
-              type="button"
-              className="resend-btn"
-              style={{
-                marginTop: "12px",
-                background: "linear-gradient(90deg, #00f7ff60, #5900ff41)",
-                color: "#fff",
-                padding: "10px 16px",
-                borderRadius: "8px",
-                border: "none",
-                cursor: "pointer",
-                width: "100%"
-              }}
-              onClick={async () => {
-                try {
-                  setMessage({ text: "Sending new code...", type: "success" });
-                  await axios.post(`${BASE}/api/auth/login`, {
-                    email: form.email,
-                    password: form.password,
-                  });
-                  setMessage({ text: "✅ New code sent to your email.", type: "success" });
-                } catch (err) {
-                  setMessage({ text: "❌ Failed to resend code.", type: "error" });
-                }
-              }}
-            >
-              Resend Code
-            </button>
+              {/* 🔁 RESEND OTP BUTTON */}
+              <button
+                type="button"
+                className="resend-btn"
+                style={{
+                  marginTop: "12px",
+                  background: "linear-gradient(90deg, #00f7ff60, #5900ff41)",
+                  color: "#fff",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+                onClick={async () => {
+                  try {
+                    setMessage({ text: "Sending new code...", type: "success" });
 
-            <p
-              className="switch"
-              onClick={() => {
-                setShowOtpForm(false);
-                setTempUserId(null);
-                setOtpToken("");
-                setMessage({ text: "", type: "" });
-              }}
-            >
-              Back to login
-            </p>
-          </form>
-        ) : (
-          /* --- Login / Register Form --- */
+                    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    const realIp = await getRealIP();
+
+                    await axios.post(`${BASE}/api/auth/login`, {
+                      email: form.email,
+                      password: form.password,
+                    });
+
+                    setMessage({
+                      text: "✅ New code sent to your email.",
+                      type: "success",
+                    });
+                  } catch (err) {
+                    setMessage({
+                      text: "❌ Failed to resend code.",
+                      type: "error",
+                    });
+                  }
+                }}
+              >
+                Resend Code
+              </button>
+
+              <p
+                className="switch"
+                onClick={() => {
+                  setShowOtpForm(false);
+                  setTempUserId(null);
+                  setOtpToken("");
+                  setMessage({ text: "", type: "" });
+                }}
+              >
+                Back to login
+              </p>
+            </form>
+  ) : (
+          // --- Login/Register form ---
           <form className="auth-form" onSubmit={handleSubmit}>
             <h2>{mode === "login" ? "Login" : "Register"}</h2>
 
@@ -283,21 +289,11 @@ export default function Auth() {
               {mode === "login" ? "Login" : "Register"}
             </button>
 
-            {/* --- RESEND BUTTON FOR UNVERIFIED USERS --- */}
+            {/* --- RESEND BUTTON --- */}
             {mode === "login" && showResend && (
               <button
                 type="button"
                 className="resend-btn"
-                style={{
-                  marginTop: "12px",
-                  background: "linear-gradient(90deg, #ff4b2b, #ff416c)",
-                  color: "#fff",
-                  padding: "10px 16px",
-                  borderRadius: "8px",
-                  border: "none",
-                  cursor: "pointer",
-                  width: "100%"
-                }}
                 onClick={handleResend}
               >
                 Resend Verification Email
