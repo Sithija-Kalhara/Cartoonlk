@@ -5,17 +5,55 @@ import NavBar from "./NavBar";
 import "./Years.css";
 
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
 
-// 🔗 Safe file URL
-const fileUrl = (path = "") => {
-  if (!path) return "/fallback.png";
-  if (path.startsWith("http")) return path;
-  if (path.startsWith("/api")) return `${BASE}${path}`;
-  return `${BASE}/api/videos/stream/${path}`;
+// 🔗 URL helpers
+const streamUrl = (name = "") => {
+  if (!name) return "";
+  if (name.startsWith("http://") || name.startsWith("https://")) {
+    return name;
+  }
+  return `${PUBLIC_CDN}/${encodeURIComponent(name)}`;
 };
 
-export default function Years() {
-  const { year } = useParams();
+const anyFileUrl = (p = "") => {
+  if (!p) return "";
+  if (p.startsWith("http://") || p.startsWith("https://")) {
+    return p;
+  }
+  return `${BASE}/api/videos/file/${encodeURIComponent(p)}`;
+};
+
+// Combined thumbnail URL function (same as Watch.jsx)
+const getThumbUrl = (video) => {
+  if (!video) return "";
+
+  // 1. Database එකේ thumbnail එකට සම්පූර්ණ URL එකක් (http:// හෝ https://) තිබේ නම්
+  if (video.landscapeThumbnail && (video.landscapeThumbnail.startsWith("http://") || video.landscapeThumbnail.startsWith("https://"))) {
+    return video.landscapeThumbnail;
+  }
+  if (video.thumbnail && (video.thumbnail.startsWith("http://") || video.thumbnail.startsWith("https://"))) {
+    return video.thumbnail;
+  }
+
+  // 2. නැතහොත් එය PUBLIC_CDN එකෙන් හෝ වෙනත් ෆයිල් නමකින් එනවා නම්
+  if (video.landscapeThumbnail) {
+    return streamUrl(video.landscapeThumbnail);
+  }
+  if (video.thumbnail) {
+    return streamUrl(video.thumbnail);
+  }
+
+  // 3. Telegram file_id එකකින් නම්
+  if (video.thumbnailFileId && video.channelId) {
+    return `${BASE}/api/videos/thumbnail/${video.channelId}/${video.thumbnailFileId}`;
+  }
+
+  return "/placeholder.jpg";
+};
+
+export default function CategoryPage() {
+  const { category } = useParams();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeries, setSelectedSeries] = useState(null);
@@ -72,31 +110,41 @@ export default function Years() {
     });
   };
 
-  // 🧩 Group videos by year
-  const videosByYear = useMemo(() => {
+  // 🧩 Group videos by category
+  const videosByCategory = useMemo(() => {
     const deduped = getUniqueSeries(videos);
     const grouped = deduped.reduce((acc, v) => {
-      let y = "Unknown";
-      if (v.releaseDate) {
-        const d = new Date(v.releaseDate);
-        if (!isNaN(d)) y = d.getFullYear().toString();
-      }
-      (acc[y] ||= []).push(v);
+      // If no category, use "Uncategorized"
+      const cat = v.category || "Uncategorized";
+      (acc[cat] ||= []).push(v);
       return acc;
     }, {});
-    Object.keys(grouped).forEach((y) =>
-      grouped[y].sort(
+    
+    // Sort videos within each category
+    Object.keys(grouped).forEach((cat) =>
+      grouped[cat].sort(
         (a, b) =>
           new Date(b.releaseDate || b.createdAt) -
           new Date(a.releaseDate || a.createdAt)
       )
     );
-    const years = Object.keys(grouped)
-      .filter((y) => y !== "Unknown")
-      .sort((a, b) => Number(b) - Number(a));
-    if (grouped.Unknown) years.push("Unknown");
-    return { grouped, years };
+    
+    // Get sorted category names
+    const categories = Object.keys(grouped).sort((a, b) => {
+      // Put "Uncategorized" at the end
+      if (a === "Uncategorized") return 1;
+      if (b === "Uncategorized") return -1;
+      return a.localeCompare(b);
+    });
+    
+    return { grouped, categories };
   }, [videos]);
+
+  // Filter videos by selected category
+  const categoryVideos = useMemo(() => {
+    if (!category) return [];
+    return videosByCategory.grouped[category] || [];
+  }, [category, videosByCategory]);
 
   // 🧩 Series by season
   const seriesBySeason = useMemo(() => {
@@ -123,9 +171,9 @@ export default function Years() {
 
   const handleCloseModal = () => setSelectedSeries(null);
 
-  // 🧩 Auto-scroll for /years
+  // 🧩 Auto-scroll for category view
   useEffect(() => {
-    if (year) return;
+    if (category) return;
     const id = setInterval(() => {
       scrollRefs.current.forEach((el) => {
         if (!el) return;
@@ -134,7 +182,7 @@ export default function Years() {
       });
     }, 20);
     return () => clearInterval(id);
-  }, [year]);
+  }, [category]);
 
   return (
     <div className="cartoon-container">
@@ -142,65 +190,71 @@ export default function Years() {
 
       {loading ? (
         <div style={{ color: "#aaa", padding: 20 }}>Loading…</div>
-      ) : year ? (
-        // ✅ /years/:year
+      ) : category ? (
+        // ✅ /category/:category
         <div className="movie-section">
-          <h2 className="section-title">{year} – All Videos</h2>
-          {(videosByYear.grouped[year] || []).map((v) => {
-            const isSeries = v.season && Number(v.season) >= 1;
-            return (
-              <div
-                key={v._id}
-                className="movie-card"
-                onClick={() =>
-                  isSeries
-                    ? handleSeriesClick(v.title)
-                    : (window.location.href = `/watch/${v._id}`)
-                }
-              >
-                <div className="thumbnail-wrapper">
-                  <img
-                    src={fileUrl(v.landscapeThumbnail || v.thumbnail)}
-                    alt={v.title}
-                    className="movie-thumbnail"
-                    onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
-                  />
-                  <span className="tag top-right">{year}</span>
+          <h2 className="section-title">{category} – All Videos</h2>
+          {categoryVideos.length === 0 ? (
+            <p style={{ color: "#aaa", padding: "20px 0" }}>
+              No videos found in this category.
+            </p>
+          ) : (
+            categoryVideos.map((v) => {
+              const isSeries = v.season && Number(v.season) >= 1;
+              return (
+                <div
+                  key={v._id}
+                  className="movie-card"
+                  onClick={() =>
+                    isSeries
+                      ? handleSeriesClick(v.title)
+                      : (window.location.href = `/watch/${v._id}`)
+                  }
+                >
+                  <div className="thumbnail-wrapper">
+                    <img
+                      src={getThumbUrl(v)}
+                      alt={v.title}
+                      className="movie-thumbnail"
+                      onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
+                    />
+                    <span className="tag top-right">{v.category || "Uncategorized"}</span>
+                  </div>
+                  <div className="movie-info">
+                    <div className="movie-title">{v.title}</div>
+                    {isSeries && (
+                      <p style={{ fontSize: "12px", opacity: 0.7 }}>
+                        TV Series • {seriesByName[v.title]?.length || 0} Episodes
+                      </p>
+                    )}
+                    {!isSeries && v.releaseDate && (
+                      <p style={{ fontSize: "12px", opacity: 0.7 }}>
+                        Released:{" "}
+                        {new Date(v.releaseDate).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="movie-info">
-                  <div className="movie-title">{v.title}</div>
-                  {isSeries && (
-                    <p style={{ fontSize: "12px", opacity: 0.7 }}>
-                      TV Series • {seriesByName[v.title]?.length || 0} Episodes
-                    </p>
-                  )}
-                  {!isSeries && v.releaseDate && (
-                    <p style={{ fontSize: "12px", opacity: 0.7 }}>
-                      Released:{" "}
-                      {new Date(v.releaseDate).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       ) : (
-        // ✅ /years (all years view)
-        videosByYear.years.map((y, idx) => (
-          <div className="movie-section" key={y}>
+        // ✅ /category (all categories view)
+        videosByCategory.categories.map((cat, idx) => (
+          <div className="movie-section" key={cat}>
             <h2 className="section-title">
-              <Link to={`/years/${encodeURIComponent(y)}`}>{y}</Link>
+              <Link to={`/category/${encodeURIComponent(cat)}`}>{cat}</Link>
             </h2>
             <div
               className="movie-list"
               ref={(el) => (scrollRefs.current[idx] = el)}
             >
-              {videosByYear.grouped[y].map((v) => {
+              {videosByCategory.grouped[cat].map((v) => {
                 const isSeries = v.season && Number(v.season) >= 1;
                 return (
                   <div
@@ -214,11 +268,12 @@ export default function Years() {
                   >
                     <div className="thumbnail-wrapper">
                       <img
-                        src={fileUrl(v.landscapeThumbnail || v.thumbnail)}
+                        src={getThumbUrl(v)}
                         alt={v.title}
                         className="movie-thumbnail"
+                        onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
                       />
-                      <span className="tag top-right">{y}</span>
+                      <span className="tag top-right">{cat}</span>
                     </div>
                     <div className="movie-info">
                       <div className="movie-title">{v.title}</div>
@@ -245,12 +300,10 @@ export default function Years() {
           >
             <div className="series-hero">
               <img
-                src={fileUrl(
-                  selectedSeries[0].landscapeThumbnail ||
-                    selectedSeries[0].thumbnail
-                )}
+                src={getThumbUrl(selectedSeries[0])}
                 alt={selectedSeries[0].title}
                 className="series-banner"
+                onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
               />
               <div className="series-hero-overlay">
                 <h2>{selectedSeries[0].title}</h2>
@@ -285,12 +338,9 @@ export default function Years() {
                 <div key={ep._id} className="episode-card">
                   <Link to={`/watch/${ep._id}`} className="episode-thumb">
                     <img
-                      src={fileUrl(
-                        ep.landscapeThumbnail ||
-                          ep.thumbnail ||
-                          selectedSeries[0].landscapeThumbnail
-                      )}
+                      src={getThumbUrl(ep) || getThumbUrl(selectedSeries[0])}
                       alt={ep.name || `Episode ${ep.episode}`}
+                      onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
                     />
                   </Link>
                   <div className="episode-info">

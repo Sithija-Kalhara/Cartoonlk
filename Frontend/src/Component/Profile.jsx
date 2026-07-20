@@ -11,9 +11,47 @@ const BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
   ""
 );
 const API = `${BASE}/api`;
+const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
+
+// 🔗 URL helpers
+const streamUrl = (name = "") => {
+  if (!name) return "";
+  if (name.startsWith("http://") || name.startsWith("https://")) {
+    return name;
+  }
+  return `${PUBLIC_CDN}/${encodeURIComponent(name)}`;
+};
+
+// Combined thumbnail URL function (same as Watch.jsx)
+const getThumbUrl = (video) => {
+  if (!video) return "/default-avatar.png";
+
+  // 1. Database එකේ thumbnail එකට සම්පූර්ණ URL එකක් (http:// හෝ https://) තිබේ නම්
+  if (video.landscapeThumbnail && (video.landscapeThumbnail.startsWith("http://") || video.landscapeThumbnail.startsWith("https://"))) {
+    return video.landscapeThumbnail;
+  }
+  if (video.thumbnail && (video.thumbnail.startsWith("http://") || video.thumbnail.startsWith("https://"))) {
+    return video.thumbnail;
+  }
+
+  // 2. නැතහොත් එය PUBLIC_CDN එකෙන් හෝ වෙනත් ෆයිල් නමකින් එනවා නම්
+  if (video.landscapeThumbnail) {
+    return streamUrl(video.landscapeThumbnail);
+  }
+  if (video.thumbnail) {
+    return streamUrl(video.thumbnail);
+  }
+
+  // 3. Telegram file_id එකකින් නම්
+  if (video.thumbnailFileId && video.channelId) {
+    return `${BASE}/api/videos/thumbnail/${video.channelId}/${video.thumbnailFileId}`;
+  }
+
+  return "/default-avatar.png";
+};
 
 export default function Profile() {
-  const { user, setUser } = useAuth(); // Make sure setUser is imported from context
+  const { user, setUser } = useAuth();
   const [history, setHistory] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [tab, setTab] = useState("watchlist");
@@ -23,39 +61,25 @@ export default function Profile() {
   const [movieName, setMovieName] = useState("");
   const [requestMsg, setRequestMsg] = useState("");
 
-  // --- FIXED useEffect ---
-  // This single block replaces BOTH of your old useEffects
   useEffect(() => {
-    // 1. Check if the user is already loaded in the context
     if (user) {
-      // User is loaded, fetch their data
       loadUserData(user);
     } else {
-      // 2. User is not in context, try to load from localStorage
       const stored = localStorage.getItem("user");
       if (stored) {
-        // We found a user in storage, update the context
         setUser(JSON.parse(stored));
-        // loadUserData() will run on the *next* render
-        // because this useEffect will run again when 'user' changes.
       } else {
-        // 3. No user in context, no user in storage. Kick to login.
         navigate("/auth");
       }
     }
-  }, [user, navigate, setUser]); // Add setUser to the dependency array
-  // --- END OF FIX ---
+  }, [user, navigate, setUser]);
 
   const loadUserData = async (u) => {
-    // --- SAFETY FIX ---
-    // If the user object or its _id isn't loaded, stop.
     if (!u?._id) {
       return;
     }
-    // --- END OF FIX ---
 
     try {
-      // These calls are now safe
       const res1 = await axios.get(`${API}/videos/history/${u._id}`);
       const res2 = await axios.get(`${API}/videos/favorites/${u._id}`);
       setHistory(res1.data || []);
@@ -88,11 +112,11 @@ export default function Profile() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    setUser(null); // Clear context
+    setUser(null);
     navigate("/auth");
   };
 
-  if (!user) return null; // Return null while user is loading
+  if (!user) return null;
 
   return (
     <div className="dashboard-container">
@@ -103,9 +127,10 @@ export default function Profile() {
         <aside className="sidebar">
           <div className="user-block">
             <img
-              src={`${user?.profilePic || "/default-avatar.png"}?v=${Date.now()}`}
+              src={user?.profilePic ? getThumbUrl({ thumbnail: user.profilePic }) : "/default-avatar.png"}
               alt="Profile"
               className="avatar"
+              onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
             />
             <h3>{user.name}</h3>
           </div>
@@ -174,8 +199,9 @@ export default function Profile() {
                       >
                         <div className="thumb">
                           <img
-                            src={v.landscapeThumbnail || v.thumbnail}
+                            src={getThumbUrl(v)}
                             alt={v.title}
+                            onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
                           />
                           {h.progress > 0 && (
                             <div className="progress-line">
@@ -229,8 +255,9 @@ export default function Profile() {
                           style={{ cursor: "pointer" }}
                         >
                           <img
-                            src={v.landscapeThumbnail || v.thumbnail}
+                            src={getThumbUrl(v)}
                             alt={v.title}
+                            onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
                           />
                           {h.progress > 0 && (
                             <div className="progress-line">
@@ -274,8 +301,9 @@ export default function Profile() {
                 {favorites.map((v) => (
                   <div key={v._id} className="movie-card">
                     <img
-                      src={v.landscapeThumbnail || v.thumbnail}
+                      src={getThumbUrl(v)}
                       alt={v.title}
+                      onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
                     />
                     <h4>{v.title}</h4>
                   </div>

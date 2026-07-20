@@ -6,7 +6,52 @@ import { Helmet } from "react-helmet";
 import "./SearchPage.css";
 
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
-const CDN = (import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com").replace(/\/+$/, "");
+const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
+
+// 🔗 URL helpers
+const streamUrl = (name = "") => {
+  if (!name) return "";
+  if (name.startsWith("http://") || name.startsWith("https://")) {
+    return name;
+  }
+  return `${PUBLIC_CDN}/${encodeURIComponent(name)}`;
+};
+
+const anyFileUrl = (p = "") => {
+  if (!p) return "";
+  if (p.startsWith("http://") || p.startsWith("https://")) {
+    return p;
+  }
+  return `${BASE}/api/videos/file/${encodeURIComponent(p)}`;
+};
+
+// Combined thumbnail URL function (same as Watch.jsx)
+const getThumbUrl = (video) => {
+  if (!video) return "/fallback.png";
+
+  // 1. Database එකේ thumbnail එකට සම්පූර්ණ URL එකක් (http:// හෝ https://) තිබේ නම්
+  if (video.landscapeThumbnail && (video.landscapeThumbnail.startsWith("http://") || video.landscapeThumbnail.startsWith("https://"))) {
+    return video.landscapeThumbnail;
+  }
+  if (video.thumbnail && (video.thumbnail.startsWith("http://") || video.thumbnail.startsWith("https://"))) {
+    return video.thumbnail;
+  }
+
+  // 2. නැතහොත් එය PUBLIC_CDN එකෙන් හෝ වෙනත් ෆයිල් නමකින් එනවා නම්
+  if (video.landscapeThumbnail) {
+    return streamUrl(video.landscapeThumbnail);
+  }
+  if (video.thumbnail) {
+    return streamUrl(video.thumbnail);
+  }
+
+  // 3. Telegram file_id එකකින් නම්
+  if (video.thumbnailFileId && video.channelId) {
+    return `${BASE}/api/videos/thumbnail/${video.channelId}/${video.thumbnailFileId}`;
+  }
+
+  return "/fallback.png";
+};
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -20,7 +65,7 @@ export default function SearchPage() {
 
   // ✅ Diagnostic check: log what API returns
   useEffect(() => {
-    fetch("https://api.cartoonlk.com/api/videos/search?q=test")
+    fetch(`${BASE}/api/videos/search?q=test`)
       .then((r) => r.json())
       .then((d) =>
         console.log(
@@ -57,13 +102,6 @@ export default function SearchPage() {
       .finally(() => setLoading(false));
   }, [q]);
 
-  // ✅ Safe image URL builder
-  const fileUrl = (path = "") => {
-    if (!path) return "/fallback.png";
-    if (path.startsWith("http") || path.startsWith("https")) return path;
-    return `${CDN}/${path.replace(/^\/+/, "")}`;
-  };
-
   return (
     <div className="cartoon-container">
       <Helmet>
@@ -88,7 +126,7 @@ export default function SearchPage() {
             {results.map((v) => (
               <Link to={`/watch/${v._id}`} key={v._id} className="movie-row">
                 <img
-                  src={fileUrl(v.landscapeThumbnail || v.thumbnail)}
+                  src={getThumbUrl(v)}
                   alt={v.title || v.name}
                   className="movie-thumb"
                   loading="lazy"
@@ -101,7 +139,6 @@ export default function SearchPage() {
               </Link>
             ))}
           </div>
-
         )}
       </div>
 

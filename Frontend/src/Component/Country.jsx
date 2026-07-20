@@ -3,9 +3,55 @@ import './Country.css';
 import NavBar from './NavBar';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
-import { Helmet } from "react-helmet"; // 🟢 FIXED: add this line
+import { Helmet } from "react-helmet";
 
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
+
+// 🔗 URL helpers
+const streamUrl = (name = "") => {
+  if (!name) return "";
+  if (name.startsWith("http://") || name.startsWith("https://")) {
+    return name;
+  }
+  return `${PUBLIC_CDN}/${encodeURIComponent(name)}`;
+};
+
+const anyFileUrl = (p = "") => {
+  if (!p) return "";
+  if (p.startsWith("http://") || p.startsWith("https://")) {
+    return p;
+  }
+  return `${BASE}/api/videos/file/${encodeURIComponent(p)}`;
+};
+
+// Combined thumbnail URL function (same as Watch.jsx)
+const getThumbUrl = (video) => {
+  if (!video) return "/fallback.png";
+
+  // 1. Database එකේ thumbnail එකට සම්පූර්ණ URL එකක් (http:// හෝ https://) තිබේ නම්
+  if (video.landscapeThumbnail && (video.landscapeThumbnail.startsWith("http://") || video.landscapeThumbnail.startsWith("https://"))) {
+    return video.landscapeThumbnail;
+  }
+  if (video.thumbnail && (video.thumbnail.startsWith("http://") || video.thumbnail.startsWith("https://"))) {
+    return video.thumbnail;
+  }
+
+  // 2. නැතහොත් එය PUBLIC_CDN එකෙන් හෝ වෙනත් ෆයිල් නමකින් එනවා නම්
+  if (video.landscapeThumbnail) {
+    return streamUrl(video.landscapeThumbnail);
+  }
+  if (video.thumbnail) {
+    return streamUrl(video.thumbnail);
+  }
+
+  // 3. Telegram file_id එකකින් නම්
+  if (video.thumbnailFileId && video.channelId) {
+    return `${BASE}/api/videos/thumbnail/${video.channelId}/${video.thumbnailFileId}`;
+  }
+
+  return "/fallback.png";
+};
 
 const toArray = (v) => Array.isArray(v) ? v : (v != null && v !== '' ? [v] : []);
 const norm = (s) =>
@@ -21,14 +67,6 @@ const getCountries = (video) =>
 const getPrimaryCountry = (video) => {
   const list = getCountries(video);
   return list.length ? list[0] : 'Unknown';
-};
-
-const buildThumbUrl = (thumb) => {
-  if (!thumb) return '/fallback.png';
-  const s = String(thumb);
-  if (s.startsWith('http')) return s;
-  if (s.startsWith('/api')) return `${BASE}${s}`;
-  return `${BASE}/api/videos/stream/${s}`;
 };
 
 export default function Country() {
@@ -136,7 +174,7 @@ export default function Country() {
                 <Link to={`/watch/${video._id}`} key={video._id} className="movie-card">
                   <div className="thumbnail-wrapper">
                     <img
-                      src={buildThumbUrl(video.thumbnail)}
+                      src={getThumbUrl(video)}
                       alt={video.title}
                       className="movie-thumbnail"
                       loading="lazy"
@@ -166,7 +204,7 @@ export default function Country() {
                     <Link to={`/watch/${video._id}`} key={video._id} className="movie-card">
                       <div className="thumbnail-wrapper">
                         <img
-                          src={buildThumbUrl(video.thumbnail)}
+                          src={getThumbUrl(video)}
                           alt={video.title}
                           className="movie-thumbnail"
                           loading="lazy"
@@ -185,15 +223,15 @@ export default function Country() {
           </>
         )}
       </div>
+      
       <footer className="footer">
-  <div className="footer-links">
-    <Link to="/about">About</Link> |{" "}
-    <Link to="/terms">Terms</Link> |{" "}
-    <Link to="/privacy-policy">Privacy</Link>
-  </div>
-  <div>© {new Date().getFullYear()} Eyerone Team</div>
-</footer>
-
+        <div className="footer-links">
+          <Link to="/about">About</Link> |{" "}
+          <Link to="/terms">Terms</Link> |{" "}
+          <Link to="/privacy-policy">Privacy</Link>
+        </div>
+        <div>© {new Date().getFullYear()} Eyerone Team</div>
+      </footer>
     </div>
   );
 }
