@@ -5,13 +5,51 @@ import NavBar from "./NavBar";
 import "./Years.css";
 
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
 
-// 🔗 Safe file URL
-const fileUrl = (path = "") => {
-  if (!path) return "/fallback.png";
-  if (path.startsWith("http")) return path;
-  if (path.startsWith("/api")) return `${BASE}${path}`;
-  return `${BASE}/api/videos/stream/${path}`;
+// 🔗 URL helpers
+const streamUrl = (name = "") => {
+  if (!name) return "";
+  if (name.startsWith("http://") || name.startsWith("https://")) {
+    return name;
+  }
+  return `${PUBLIC_CDN}/${encodeURIComponent(name)}`;
+};
+
+const anyFileUrl = (p = "") => {
+  if (!p) return "";
+  if (p.startsWith("http://") || p.startsWith("https://")) {
+    return p;
+  }
+  return `${BASE}/api/videos/file/${encodeURIComponent(p)}`;
+};
+
+// Combined thumbnail URL function (same as Watch.jsx)
+const getThumbUrl = (video) => {
+  if (!video) return "/placeholder.jpg";
+
+  // 1. Database එකේ thumbnail එකට සම්පූර්ණ URL එකක් (http:// හෝ https://) තිබේ නම්
+  if (video.landscapeThumbnail && (video.landscapeThumbnail.startsWith("http://") || video.landscapeThumbnail.startsWith("https://"))) {
+    return video.landscapeThumbnail;
+  }
+  if (video.thumbnail && (video.thumbnail.startsWith("http://") || video.thumbnail.startsWith("https://"))) {
+    return video.thumbnail;
+  }
+
+  // 2. නැතහොත් එය PUBLIC_CDN එකෙන් හෝ වෙනත් ෆයිල් නමකින් එනවා නම්
+  if (video.landscapeThumbnail) {
+    return streamUrl(video.landscapeThumbnail);
+  }
+  if (video.thumbnail) {
+    return streamUrl(video.thumbnail);
+  }
+
+  // 3. Telegram file_id එකකින් නම්
+  if (video.thumbnailFileId && video.channelId) {
+    return `${BASE}/api/videos/thumbnail/${video.channelId}/${video.thumbnailFileId}`;
+  }
+
+  return "/placeholder.jpg";
 };
 
 export default function Years() {
@@ -160,7 +198,7 @@ export default function Years() {
               >
                 <div className="thumbnail-wrapper">
                   <img
-                    src={fileUrl(v.landscapeThumbnail || v.thumbnail)}
+                    src={getThumbUrl(v)}
                     alt={v.title}
                     className="movie-thumbnail"
                     onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
@@ -214,9 +252,10 @@ export default function Years() {
                   >
                     <div className="thumbnail-wrapper">
                       <img
-                        src={fileUrl(v.landscapeThumbnail || v.thumbnail)}
+                        src={getThumbUrl(v)}
                         alt={v.title}
                         className="movie-thumbnail"
+                        onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
                       />
                       <span className="tag top-right">{y}</span>
                     </div>
@@ -245,12 +284,10 @@ export default function Years() {
           >
             <div className="series-hero">
               <img
-                src={fileUrl(
-                  selectedSeries[0].landscapeThumbnail ||
-                    selectedSeries[0].thumbnail
-                )}
+                src={getThumbUrl(selectedSeries[0])}
                 alt={selectedSeries[0].title}
                 className="series-banner"
+                onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
               />
               <div className="series-hero-overlay">
                 <h2>{selectedSeries[0].title}</h2>
@@ -285,12 +322,9 @@ export default function Years() {
                 <div key={ep._id} className="episode-card">
                   <Link to={`/watch/${ep._id}`} className="episode-thumb">
                     <img
-                      src={fileUrl(
-                        ep.landscapeThumbnail ||
-                          ep.thumbnail ||
-                          selectedSeries[0].landscapeThumbnail
-                      )}
+                      src={getThumbUrl(ep) || getThumbUrl(selectedSeries[0])}
                       alt={ep.name || `Episode ${ep.episode}`}
+                      onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
                     />
                   </Link>
                   <div className="episode-info">

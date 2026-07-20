@@ -5,13 +5,59 @@ import axios from 'axios';
 import NavBar from './NavBar';
 import './TvSeries.css'; // reuse the same style
 
+const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
+
+// 🔗 URL helpers
+const streamUrl = (name = "") => {
+  if (!name) return "";
+  if (name.startsWith("http://") || name.startsWith("https://")) {
+    return name;
+  }
+  return `${PUBLIC_CDN}/${encodeURIComponent(name)}`;
+};
+
+const anyFileUrl = (p = "") => {
+  if (!p) return "";
+  if (p.startsWith("http://") || p.startsWith("https://")) {
+    return p;
+  }
+  return `${BASE}/api/videos/file/${encodeURIComponent(p)}`;
+};
+
+// Combined thumbnail URL function (same as Watch.jsx)
+const getThumbUrl = (video) => {
+  if (!video) return "/fallback.png";
+
+  // 1. Database එකේ thumbnail එකට සම්පූර්ණ URL එකක් (http:// හෝ https://) තිබේ නම්
+  if (video.landscapeThumbnail && (video.landscapeThumbnail.startsWith("http://") || video.landscapeThumbnail.startsWith("https://"))) {
+    return video.landscapeThumbnail;
+  }
+  if (video.thumbnail && (video.thumbnail.startsWith("http://") || video.thumbnail.startsWith("https://"))) {
+    return video.thumbnail;
+  }
+
+  // 2. නැතහොත් එය PUBLIC_CDN එකෙන් හෝ වෙනත් ෆයිල් නමකින් එනවා නම්
+  if (video.landscapeThumbnail) {
+    return streamUrl(video.landscapeThumbnail);
+  }
+  if (video.thumbnail) {
+    return streamUrl(video.thumbnail);
+  }
+
+  // 3. Telegram file_id එකකින් නම්
+  if (video.thumbnailFileId && video.channelId) {
+    return `${BASE}/api/videos/thumbnail/${video.channelId}/${video.thumbnailFileId}`;
+  }
+
+  return "/fallback.png";
+};
+
 const SeriesPage = () => {
   const { title } = useParams();
   const [episodes, setEpisodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 
   useEffect(() => {
     const fetchEpisodes = async () => {
@@ -48,7 +94,7 @@ const SeriesPage = () => {
     };
 
     fetchEpisodes();
-  }, [title, BASE]);
+  }, [title]);
 
   const groupedBySeason = useMemo(() => {
     const grouped = {};
@@ -82,9 +128,7 @@ const SeriesPage = () => {
                 <Link to={`/watch/${ep._id}`} key={ep._id} className="movie-card">
                   <div className="thumbnail-wrapper">
                     <img
-                      src={ep.landscapeThumbnail
-                        ? `${BASE}/api/videos/file/${encodeURIComponent(ep.landscapeThumbnail)}`
-                        : `${BASE}/api/videos/file/${encodeURIComponent(ep.thumbnail || '')}`}
+                      src={getThumbUrl(ep)}
                       alt={ep.name || ep.title}
                       className="movie-thumbnail"
                       loading="lazy"
@@ -112,15 +156,14 @@ const SeriesPage = () => {
         ))}
       </div>
 
-     <footer className="footer">
-  <div className="footer-links">
-    <Link to="/about">About</Link> |{" "}
-    <Link to="/terms">Terms</Link> |{" "}
-    <Link to="/privacy-policy">Privacy</Link>
-  </div>
-  <div>© {new Date().getFullYear()} Eyerone Team</div>
-</footer>
-
+      <footer className="footer">
+        <div className="footer-links">
+          <Link to="/about">About</Link> |{" "}
+          <Link to="/terms">Terms</Link> |{" "}
+          <Link to="/privacy-policy">Privacy</Link>
+        </div>
+        <div>© {new Date().getFullYear()} Eyerone Team</div>
+      </footer>
     </div>
   );
 };

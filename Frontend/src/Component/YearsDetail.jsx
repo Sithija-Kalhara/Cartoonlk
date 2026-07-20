@@ -3,17 +3,46 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import NavBar from "./NavBar";
 import "./HomePage.css";
-import { Helmet } from "react-helmet"; // ✅ for SEO
+import { Helmet } from "react-helmet";
 
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
 
-// ✅ Helper for building file URLs safely
-const fileUrl = (p = "") => {
-  const s = String(p || "");
-  if (!s) return "";
-  if (s.startsWith("http")) return s;
-  if (s.startsWith("/api")) return `${BASE}${s}`;
-  return `${BASE}/api/videos/stream/${s}`;
+// 🔗 URL helpers
+const streamUrl = (name = "") => {
+  if (!name) return "";
+  if (name.startsWith("http://") || name.startsWith("https://")) {
+    return name;
+  }
+  return `${PUBLIC_CDN}/${encodeURIComponent(name)}`;
+};
+
+// Combined thumbnail URL function (same as Watch.jsx)
+const getThumbUrl = (video) => {
+  if (!video) return "/fallback.png";
+
+  // 1. Database එකේ thumbnail එකට සම්පූර්ණ URL එකක් (http:// හෝ https://) තිබේ නම්
+  if (video.landscapeThumbnail && (video.landscapeThumbnail.startsWith("http://") || video.landscapeThumbnail.startsWith("https://"))) {
+    return video.landscapeThumbnail;
+  }
+  if (video.thumbnail && (video.thumbnail.startsWith("http://") || video.thumbnail.startsWith("https://"))) {
+    return video.thumbnail;
+  }
+
+  // 2. නැතහොත් එය PUBLIC_CDN එකෙන් හෝ වෙනත් ෆයිල් නමකින් එනවා නම්
+  if (video.landscapeThumbnail) {
+    return streamUrl(video.landscapeThumbnail);
+  }
+  if (video.thumbnail) {
+    return streamUrl(video.thumbnail);
+  }
+
+  // 3. Telegram file_id එකකින් නම්
+  if (video.thumbnailFileId && video.channelId) {
+    return `${BASE}/api/videos/thumbnail/${video.channelId}/${video.thumbnailFileId}`;
+  }
+
+  return "/fallback.png";
 };
 
 const YearsDetail = () => {
@@ -27,7 +56,8 @@ const YearsDetail = () => {
       try {
         setLoading(true);
         const res = await axios.get(`${BASE}/api/videos`);
-        const filtered = (res.data || [])
+        const data = Array.isArray(res.data) ? res.data : res.data?.videos || [];
+        const filtered = data
           .filter(
             (v) =>
               v.releaseDate &&
@@ -78,7 +108,7 @@ const YearsDetail = () => {
                 <Link to={`/watch/${v._id}`}>
                   <div className="thumbnail-wrapper">
                     <img
-                      src={fileUrl(v.thumbnail)}
+                      src={getThumbUrl(v)}
                       alt={v.title}
                       className="movie-thumbnail"
                       loading="lazy"
@@ -106,15 +136,14 @@ const YearsDetail = () => {
         )}
       </div>
 
-     <footer className="footer">
-  <div className="footer-links">
-    <Link to="/about">About</Link> |{" "}
-    <Link to="/terms">Terms</Link> |{" "}
-    <Link to="/privacy-policy">Privacy</Link>
-  </div>
-  <div>© {new Date().getFullYear()} Eyerone Team</div>
-</footer>
-
+      <footer className="footer">
+        <div className="footer-links">
+          <Link to="/about">About</Link> |{" "}
+          <Link to="/terms">Terms</Link> |{" "}
+          <Link to="/privacy-policy">Privacy</Link>
+        </div>
+        <div>© {new Date().getFullYear()} Eyerone Team</div>
+      </footer>
     </div>
   );
 };
