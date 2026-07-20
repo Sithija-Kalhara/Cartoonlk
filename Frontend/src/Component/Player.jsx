@@ -426,17 +426,39 @@ export default function Player({
     return () => track.removeEventListener("cuechange", onCueChange);
   }, [subsOn, hasSubtitle]);
 
-  // Reload video when quality changes
+  // Reload video when the source URL changes (e.g. quality switch).
+  // The time the user was at is preserved instead of restarting from 0.
+  const lastUrlRef = useRef(null);
   useEffect(() => {
     const v = videoRef.current;
     if (!v || !videoUrl) return;
-    const wasPlaying = !v.paused;
+
+    // Only resume from a saved time when this is a switch between two
+    // different sources on an already-loaded video (a quality change) —
+    // not the very first load of the player.
+    const isSourceSwitch =
+      lastUrlRef.current !== null && lastUrlRef.current !== videoUrl;
+    const resumeTime = isSourceSwitch ? v.currentTime : 0;
+    const wasPlaying = isSourceSwitch ? !v.paused : false;
+
     setPlaybackError(false);
+
+    const onLoadedMeta = () => {
+      if (isSourceSwitch && resumeTime > 0 && resumeTime < v.duration) {
+        v.currentTime = resumeTime;
+      }
+      if (wasPlaying) {
+        v.play().catch(() => {});
+      }
+      v.removeEventListener("loadedmetadata", onLoadedMeta);
+    };
+    v.addEventListener("loadedmetadata", onLoadedMeta);
+
     v.src = videoUrl;
     v.load();
-    if (wasPlaying && autoPlay) {
-      v.play().catch(() => {});
-    }
+    lastUrlRef.current = videoUrl;
+
+    return () => v.removeEventListener("loadedmetadata", onLoadedMeta);
   }, [videoUrl, autoPlay]);
 
   return (
@@ -444,7 +466,6 @@ export default function Player({
       className={`video-wrapper ${controlsHidden ? "controls-hidden" : "controls-visible"}`}
     >
       <video
-        key={videoUrl}
         ref={videoRef}
         className="video-player"
         preload="auto"

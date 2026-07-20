@@ -22,6 +22,8 @@ const MovieCardOverlay = ({ video, handleSeriesClick, myList = [], handleAddToLi
   const isAdded = !isSeries && Array.isArray(myList) ? myList.includes(video._id) : false;
   const genres = Array.isArray(video.category) ? video.category : video.category ? [video.category] : [];
 
+
+
   return (
     <div className="movie-card-overlay">
       <div className="overlay-content">
@@ -121,16 +123,29 @@ const HomePage = () => {
     }
   }, []);
 
+  const thumbFileUrl = (path = "", channelId = "", fileId = "") => {
+  if (path) {
+    if (path.startsWith("http")) return path;
+    return `${CDN || BASE}/api/videos/stream/${encodeURIComponent(path)}`;
+  }
+  // Telegram File ID එක හරහා එන තම්බ්නේල් සඳහා
+  if (fileId && channelId) {
+    return `${BASE}/api/videos/thumbnail/${channelId}/${fileId}`;
+  }
+  return "/placeholder.jpg";
+};
+
   // 2. Fetch All Videos
-  useEffect(() => {
+useEffect(() => {
     const fetchAll = async () => {
       try {
         const res = await axios.get(`${BASE}/api/videos`);
         const list = Array.isArray(res.data) ? res.data : res.data.videos || [];
         const formatted = list.map(v => ({
           ...v,
-          thumbnailUrl: v.thumbnail || null,
-          landscapeThumbnailUrl: v.landscapeThumbnail || null
+          // මෙතැනදී landscapeThumbnail හෝ thumbnail නැත්නම් තම්බ්නේල් ෆයිල් අයිඩී එක පාවිච්චි කරන්න සෙට් කරන්න
+          thumbnailUrl: thumbFileUrl(v.thumbnail, v.channelId, v.thumbnailFileId),
+          landscapeThumbnailUrl: thumbFileUrl(v.landscapeThumbnail || v.landscapeThumbnailUrl, v.channelId, v.thumbnailFileId)
         }));
         setVideos(formatted);
         const trailers = formatted.filter(v => v.trailer && v.trailer.trim() !== "");
@@ -282,17 +297,20 @@ const HomePage = () => {
                 {[...new Set(selectedSeries.map(s => s.season))].map(s => <option key={s} value={s}>Season {s}</option>)}
               </select>
             </div>
-            <div className="episode-list">
-              {selectedSeries.filter(ep => ep.season === selectedSeason).map(ep => (
-                <Link key={ep._id} to={`/watch/${ep._id}`} className="episode-card">
-                  <div className="ep-thumb"><img src={ep.thumbnail || ep.landscapeThumbnail} alt="ep" /></div>
-                  <div className="ep-info">
-                    <h4>{ep.episode}. {ep.name || "Episode " + ep.episode}</h4>
-                    <p>{ep.description1?.substring(0, 100)}...</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+        <div className="episode-list">
+          {selectedSeries.filter(ep => ep.season === selectedSeason).map(ep => (
+            <Link key={ep._id} to={`/watch/${ep._id}`} className="episode-card">
+              <div className="ep-thumb">
+                {/* මෙතැනදීත් thumbFileUrl එක හරියටම දාන්න */}
+                <img src={thumbFileUrl(ep.landscapeThumbnail || ep.thumbnail, ep.channelId, ep.thumbnailFileId)} alt="ep" />
+              </div>
+              <div className="ep-info">
+                <h4>{ep.episode}. {ep.name || "Episode " + ep.episode}</h4>
+                <p>{ep.description1?.substring(0, 100)}...</p>
+              </div>
+            </Link>
+          ))}
+        </div>
           </div>
         </div>
       )}

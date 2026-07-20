@@ -17,7 +17,6 @@ import axios from "axios";
 import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { useLocation } from "react-router-dom";
 
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
@@ -90,13 +89,6 @@ export default function Watch() {
   const noSubTimerRef = useRef(null);
 
   const hasSubtitle = Boolean(videoData?.subtitle);
-  const location = useLocation();
-
-  // The <video> element below is only ever mounted once showPlayer is
-  // true (user tapped "Watch Now"). Nothing video-related is rendered,
-  // preloaded, or auto-played before that click — this keeps the page
-  // ad-safe (no player content visible/loading around the ad units on
-  // first paint) and avoids accidental autoplay-with-video complaints.
   const [showPlayer, setShowPlayer] = useState(false);
 
   const getAuthHeaders = useCallback(() => {
@@ -416,20 +408,41 @@ export default function Watch() {
       if (q?.filename) return streamUrl(q.filename);
       if (pool[0]?.filename) return streamUrl(pool[0].filename);
     }
-    // 1080p/4K deliberately excluded from the fallback chain.
     const fb = videoData.video720p || videoData.video480p || videoData.video;
     return fb ? streamUrl(fb) : null;
   };
 
   const videoUrl = getVideoUrl();
 
+  // Quality switch with time preservation (from the first file)
+  const lastUrlRef = useRef(null);
   useEffect(() => {
     if (!showPlayer) return;
     const v = videoRef.current;
     if (!v || !videoUrl) return;
+
+    const isSourceSwitch =
+      lastUrlRef.current !== null && lastUrlRef.current !== videoUrl;
+    const resumeTime = isSourceSwitch ? v.currentTime : 0;
+    const wasPlaying = isSourceSwitch ? !v.paused : false;
+
     setPlaybackError(false);
+
+    const onResumeAfterSwitch = () => {
+      if (isSourceSwitch && resumeTime > 0 && resumeTime < v.duration) {
+        v.currentTime = resumeTime;
+      }
+      if (wasPlaying) {
+        v.play().catch(() => {});
+      }
+      v.removeEventListener("loadedmetadata", onResumeAfterSwitch);
+    };
+    v.addEventListener("loadedmetadata", onResumeAfterSwitch);
+
     v.src = videoUrl;
     v.load();
+    lastUrlRef.current = videoUrl;
+
     const onTimeUpdate = () => {
       setCurrentTime(v.currentTime);
       setProgress((v.currentTime / v.duration) * 100);
@@ -465,6 +478,7 @@ export default function Watch() {
       v.removeEventListener("waiting", onWaiting);
       v.removeEventListener("playing", onPlaying);
       v.removeEventListener("error", onError);
+      v.removeEventListener("loadedmetadata", onResumeAfterSwitch);
     };
   }, [showPlayer, videoUrl, videoData]);
 
@@ -555,9 +569,35 @@ export default function Watch() {
     );
   };
 
-  const thumbUrl = videoData?.landscapeThumbnail
-    ? anyFileUrl(videoData.landscapeThumbnail)
-    : null;
+  // Combined thumbnail URL function (from the second file with Telegram support)
+  const getThumbUrl = () => {
+    if (!videoData) return null;
+
+    // 1. Database එකේ thumbnail එකට සම්පූර්ණ URL එකක් (http:// හෝ https://) තිබේ නම්
+    if (videoData.landscapeThumbnail && (videoData.landscapeThumbnail.startsWith("http://") || videoData.landscapeThumbnail.startsWith("https://"))) {
+      return videoData.landscapeThumbnail;
+    }
+    if (videoData.thumbnail && (videoData.thumbnail.startsWith("http://") || videoData.thumbnail.startsWith("https://"))) {
+      return videoData.thumbnail;
+    }
+
+    // 2. නැතහොත් එය PUBLIC_CDN එකෙන් හෝ වෙනත් ෆයිල් නමකින් එනවා නම්
+    if (videoData.landscapeThumbnail) {
+      return streamUrl(videoData.landscapeThumbnail);
+    }
+    if (videoData.thumbnail) {
+      return streamUrl(videoData.thumbnail);
+    }
+
+    // 3. Telegram file_id එකකින් නම්
+    if (videoData.thumbnailFileId && videoData.channelId) {
+      return `${BASE}/api/videos/thumbnail/${videoData.channelId}/${videoData.thumbnailFileId}`;
+    }
+
+    return null;
+  };
+
+  const thumbUrl = getThumbUrl();
   const trackSrc = videoData?.subtitle
     ? subtitleUrlOf(videoData.subtitle)
     : null;
@@ -657,8 +697,7 @@ export default function Watch() {
         </div>
       )}
 
-      {/* WATCH NOW — nothing player-related exists in the DOM until this
-          is clicked. That's what keeps the page ad-network-safe. */}
+      {/* WATCH NOW */}
       {videoData && !showPlayer && (
         <div
           className="watch-now-container"
@@ -681,13 +720,12 @@ export default function Watch() {
         </div>
       )}
 
-      {/* PLAYER — mounted only after Watch Now is clicked */}
+      {/* PLAYER */}
       {showPlayer && (
         <div
           className={`video-wrapper ${controlsHidden ? "controls-hidden" : "controls-visible"}`}
         >
           <video
-            key={videoUrl}
             ref={videoRef}
             className="video-player"
             preload="auto"
