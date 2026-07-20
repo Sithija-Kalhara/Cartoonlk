@@ -185,8 +185,6 @@ app.use("/api/news", newsRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/users", userRoutes);
 
-const express = require("express");
-const dotenv = require("dotenv");
 
 
 
