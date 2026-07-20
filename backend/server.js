@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const Redis = require('ioredis');
 
 // Load .env
 dotenv.config();
@@ -9,6 +10,9 @@ const path = require("path");
 
 const connectDB = require("./config/db");
 const Video = require("./models/Video");
+
+// Connect to Redis
+const redis = new Redis(process.env.REDIS_URL);
 
 // API Routes
 const videoRoutes = require("./routes/videoRoutes");
@@ -51,6 +55,45 @@ app.get("/sitemap.xml", (req, res) => {
       </sitemap>
     </sitemapindex>
   `);
+});
+
+redis.on('connect', () => {
+    console.log('📦 Connected to Redis Cloud Successfully!');
+});
+
+redis.on('error', (err) => {
+    console.error('❌ Redis Error:', err);
+});
+
+// ස්ට්‍රීම් ලින්ක් ලබාදෙන Route එක
+app.get('/stream/:channelId/:messageId', async (req, res) => {
+    const { channelId, messageId } = req.params;
+    const cacheKey = `stream_link:${channelId}:${messageId}`;
+
+    try {
+        // 1. මුලින්ම Redis Cache එකේ මේ ඩේටා තියෙනවද බලන්න
+        const cachedData = await redis.get(cacheKey);
+        if (cachedData) {
+            console.log('⚡ Serving from Redis Cache (Super Fast!)');
+            const videoInfo = JSON.parse(cachedData);
+            return res.redirect(videoInfo.streamUrl);
+        }
+
+        // 2. Cache එකේ නැත්නම්, ඔයාගේ සාමාන්‍ය ක්‍රමයට ලින්ක් එක ලබාගන්න
+        const realStreamUrl = `https://api.telegram.org/...`; // ඔයාගේ ලොජික් එක මෙතැනට දෙන්න
+
+        const responseData = { streamUrl: realStreamUrl };
+
+        // 3. ලබාගත් ලින්ක් එක ඉදිරියට පාවිච්චි කරන්න Redis වල Save කරන්න (උදා: පැය 2කට - 7200 තත්පර)
+        await redis.setex(cacheKey, 7200, JSON.stringify(responseData));
+
+        console.log('🌐 Fetched fresh from source and cached to Redis.');
+        return res.redirect(realStreamUrl);
+
+    } catch (error) {
+        console.error('Error handling stream:', error);
+        res.status(500).send('Server Error');
+    }
 });
 
 // VIDEO PAGES SITEMAP

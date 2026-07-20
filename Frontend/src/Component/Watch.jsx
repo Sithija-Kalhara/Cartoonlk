@@ -22,6 +22,12 @@ import { useLocation } from "react-router-dom";
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
 
+// Only 480p/720p are ever offered — 1080p/4K removed from storage & CDN load.
+const isAllowedLabel = (label = "") => {
+  const l = String(label).toLowerCase();
+  return l.includes("480") || l.includes("720");
+};
+
 /* ---------- URL helpers (encode safe) ---------- */
 const streamUrl = (name = "") => {
   if (!name) return "";
@@ -67,17 +73,15 @@ export default function Watch() {
   const [controlsHidden, setControlsHidden] = useState(false);
   const [subsOn, setSubsOn] = useState(false);
   const [noSubtitleMsg, setNoSubtitleMsg] = useState(false);
-  const restoreTimeRef = useRef(0);
   const restoreVolumeRef = useRef(1);
-  const restoreMutedRef = useRef(false);
   const [subtitleText, setSubtitleText] = useState("");
   const navigate = useNavigate();
   const [showNextEp, setShowNextEp] = useState(false);
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [showRotateHint, setShowRotateHint] = useState(false);
   const [similarVideos, setSimilarVideos] = useState([]);
   const [isBuffering, setIsBuffering] = useState(true);
+  const [playbackError, setPlaybackError] = useState(false);
   const tagsRef = useRef(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -87,22 +91,33 @@ export default function Watch() {
 
   const hasSubtitle = Boolean(videoData?.subtitle);
   const location = useLocation();
-  
-  // ✅ New state for showing/hiding player
+
+  // The <video> element below is only ever mounted once showPlayer is
+  // true (user tapped "Watch Now"). Nothing video-related is rendered,
+  // preloaded, or auto-played before that click — this keeps the page
+  // ad-safe (no player content visible/loading around the ad units on
+  // first paint) and avoids accidental autoplay-with-video complaints.
   const [showPlayer, setShowPlayer] = useState(false);
 
-  // ✅ Auth headers helper
   const getAuthHeaders = useCallback(() => {
     const savedToken = localStorage.getItem("token");
     return savedToken ? { Authorization: `Bearer ${savedToken}` } : {};
   }, []);
 
-  // ✅ Load user/token once
   useEffect(() => {
     const savedUser = JSON.parse(localStorage.getItem("user"));
-    const savedToken = localStorage.getItem("token");
     if (savedUser) setUser(savedUser);
-    if (savedToken) setToken(savedToken);
+  }, []);
+
+  const pickDefaultQuality = useCallback((qualities) => {
+    const has720 = qualities.find((q) => q.label.toLowerCase().includes("720"));
+    const has480 = qualities.find((q) => q.label.toLowerCase().includes("480"));
+    const isMobile =
+      typeof window !== "undefined" && window.innerWidth <= 768;
+    if (isMobile && has480) return has480.label;
+    if (has720) return has720.label;
+    if (has480) return has480.label;
+    return qualities[0]?.label || "";
   }, []);
 
   /* ---------- Control Functions ---------- */
@@ -179,36 +194,36 @@ export default function Watch() {
     setSubsOn((v) => !v);
   }, [hasSubtitle]);
 
-  /* ---------- ✅ KEYBOARD CONTROLS (NEW) ---------- */
+  /* ---------- KEYBOARD CONTROLS ---------- */
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Input fields වලදී shortcuts වැලැක්වීමට
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
         return;
+      if (!showPlayer) return;
 
       switch (e.key.toLowerCase()) {
-        case " ": // Space to Play/Pause
+        case " ":
         case "k":
           e.preventDefault();
           togglePlayPause();
           break;
-        case "f": // F for Fullscreen
+        case "f":
           e.preventDefault();
           toggleFullscreen();
           break;
-        case "m": // M for Mute
+        case "m":
           e.preventDefault();
           toggleMute();
           break;
-        case "l": // L for 10s Forward
+        case "l":
         case "arrowright":
           skip(e.key === "l" ? 10 : 5);
           break;
-        case "j": // J for 10s Backward
+        case "j":
         case "arrowleft":
           skip(e.key === "j" ? -10 : -5);
           break;
-        case "arrowup": // Volume Up
+        case "arrowup":
           e.preventDefault();
           setVolume((prev) => {
             const newVol = Math.min(1, prev + 0.1);
@@ -216,7 +231,7 @@ export default function Watch() {
             return newVol;
           });
           break;
-        case "arrowdown": // Volume Down
+        case "arrowdown":
           e.preventDefault();
           setVolume((prev) => {
             const newVol = Math.max(0, prev - 0.1);
@@ -224,7 +239,7 @@ export default function Watch() {
             return newVol;
           });
           break;
-        case "c": // C for Subtitles
+        case "c":
           toggleSubs();
           break;
         default:
@@ -234,9 +249,9 @@ export default function Watch() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [togglePlayPause, toggleFullscreen, toggleMute, toggleSubs, skip]);
+  }, [showPlayer, togglePlayPause, toggleFullscreen, toggleMute, toggleSubs, skip]);
 
-  /* ---------- Data & Effects (Original) ---------- */
+  /* ---------- Data & Effects ---------- */
   useEffect(() => {
     const fetchVideo = async () => {
       try {
@@ -245,12 +260,11 @@ export default function Watch() {
         });
         if (res.data) {
           setVideoData(res.data);
-          if (
-            Array.isArray(res.data.qualities) &&
-            res.data.qualities.length > 0
-          ) {
-            setAvailableQualities(res.data.qualities.map((q) => q.label));
-            setSelectedQuality(res.data.qualities[0]?.label || "");
+          if (Array.isArray(res.data.qualities) && res.data.qualities.length > 0) {
+            const filtered = res.data.qualities.filter((q) => isAllowedLabel(q.label));
+            const list = filtered.length > 0 ? filtered : res.data.qualities;
+            setAvailableQualities(list.map((q) => q.label));
+            setSelectedQuality(pickDefaultQuality(list));
           }
         }
       } catch (err) {
@@ -258,7 +272,7 @@ export default function Watch() {
       }
     };
     fetchVideo();
-  }, [id, getAuthHeaders]);
+  }, [id, getAuthHeaders, pickDefaultQuality]);
 
   // Only restore progress when player is shown
   useEffect(() => {
@@ -394,17 +408,16 @@ export default function Watch() {
   const getVideoUrl = () => {
     if (!videoData) return null;
     if (Array.isArray(videoData.qualities) && videoData.qualities.length) {
-      const q = videoData.qualities.find(
+      const filtered = videoData.qualities.filter((q) => isAllowedLabel(q.label));
+      const pool = filtered.length > 0 ? filtered : videoData.qualities;
+      const q = pool.find(
         (x) => String(x.label).trim() === (selectedQuality || "").trim()
       );
       if (q?.filename) return streamUrl(q.filename);
+      if (pool[0]?.filename) return streamUrl(pool[0].filename);
     }
-    const fb =
-      videoData.video4K ||
-      videoData.video1080p ||
-      videoData.video720p ||
-      videoData.video480p ||
-      videoData.video;
+    // 1080p/4K deliberately excluded from the fallback chain.
+    const fb = videoData.video720p || videoData.video480p || videoData.video;
     return fb ? streamUrl(fb) : null;
   };
 
@@ -414,6 +427,7 @@ export default function Watch() {
     if (!showPlayer) return;
     const v = videoRef.current;
     if (!v || !videoUrl) return;
+    setPlaybackError(false);
     v.src = videoUrl;
     v.load();
     const onTimeUpdate = () => {
@@ -431,17 +445,26 @@ export default function Watch() {
       setIsBuffering(false);
     };
     const onWaiting = () => setIsBuffering(true);
-    const onPlaying = () => setIsBuffering(false);
+    const onPlaying = () => {
+      setIsBuffering(false);
+      setPlaybackError(false);
+    };
+    const onError = () => {
+      setIsBuffering(false);
+      setPlaybackError(true);
+    };
 
     v.addEventListener("timeupdate", onTimeUpdate);
     v.addEventListener("loadedmetadata", onLoadedMetadata);
     v.addEventListener("waiting", onWaiting);
     v.addEventListener("playing", onPlaying);
+    v.addEventListener("error", onError);
     return () => {
       v.removeEventListener("timeupdate", onTimeUpdate);
       v.removeEventListener("loadedmetadata", onLoadedMetadata);
       v.removeEventListener("waiting", onWaiting);
       v.removeEventListener("playing", onPlaying);
+      v.removeEventListener("error", onError);
     };
   }, [showPlayer, videoUrl, videoData]);
 
@@ -467,7 +490,7 @@ export default function Watch() {
     return () => track.removeEventListener("cuechange", onCueChange);
   }, [showPlayer, subsOn, hasSubtitle]);
 
-  // ✅ Smart Similar Logic (Original)
+  // Smart Similar Logic
   const getSimilarityScore = (a, b) => {
     let score = 0;
     if (a.category && b.category && a.category === b.category) score += 30;
@@ -634,13 +657,23 @@ export default function Watch() {
         </div>
       )}
 
-
-
-      {/* ✅ WATCH NOW BUTTON - Show when player is hidden */}
+      {/* WATCH NOW — nothing player-related exists in the DOM until this
+          is clicked. That's what keeps the page ad-network-safe. */}
       {videoData && !showPlayer && (
-        <div className="watch-now-container">
-          <button 
-            className="watch-now-button" 
+        <div
+          className="watch-now-container"
+          style={
+            thumbUrl
+              ? {
+                  backgroundImage: `linear-gradient(rgba(13,15,22,0.55), rgba(13,15,22,0.55)), url(${thumbUrl})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }
+              : undefined
+          }
+        >
+          <button
+            className="watch-now-button"
             onClick={() => setShowPlayer(true)}
           >
             <FaPlay /> Watch Now
@@ -648,7 +681,7 @@ export default function Watch() {
         </div>
       )}
 
-      {/* ✅ PLAYER - Show only when showPlayer is true */}
+      {/* PLAYER — mounted only after Watch Now is clicked */}
       {showPlayer && (
         <div
           className={`video-wrapper ${controlsHidden ? "controls-hidden" : "controls-visible"}`}
@@ -662,6 +695,8 @@ export default function Watch() {
             controls={false}
             crossOrigin="anonymous"
             muted={isMuted}
+            poster={thumbUrl || undefined}
+            onContextMenu={(e) => e.preventDefault()}
           >
             {trackSrc && (
               <track
@@ -675,11 +710,30 @@ export default function Watch() {
             )}
           </video>
 
-          {isBuffering && (
+          {isBuffering && !playbackError && (
             <div className="buffering-overlay">
               <div className="spinner"></div>
             </div>
           )}
+
+          {playbackError && (
+            <div className="playback-error-overlay">
+              <p>Video load වෙන්නේ නැහැ. Try again.</p>
+              <button
+                onClick={() => {
+                  const v = videoRef.current;
+                  if (!v || !videoUrl) return;
+                  setPlaybackError(false);
+                  v.src = videoUrl;
+                  v.load();
+                  v.play().catch(() => {});
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           {showRotateHint && (
             <div className="rotate-hint">
               📱 Rotate your device for best experience
@@ -823,41 +877,86 @@ export default function Watch() {
         </div>
       )}
 
-    {videoData && (
-            <div className="photo-section" style={{ padding: '20px', color: '#fff', lineHeight: '1.6', marginTop: '20px' }}>
-              <h3 style={{ borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '15px', color: '#e50914' }}>
-                Cartoon Story
-              </h3>
-              
-              {/* 📝 Description 1 මෙතැනට එකතු කර ඇත */}
-              {videoData.description1 && (
-                <p className="watch-description-text" style={{ fontSize: '1.05rem', color: '#ddd', marginBottom: '20px', textAlign: 'justify' }}>
-                  {videoData.description1}
-                </p>
-              )}
+      {videoData && (
+        <div
+          className="photo-section"
+          style={{
+            padding: "20px",
+            color: "#fff",
+            lineHeight: "1.6",
+            marginTop: "20px",
+          }}
+        >
+          <h3
+            style={{
+              borderBottom: "1px solid #333",
+              paddingBottom: "10px",
+              marginBottom: "15px",
+              color: "#e50914",
+            }}
+          >
+            Cartoon Story
+          </h3>
 
-              {/* Scenery 1 */}
-              {videoData.photo1 && (
-                <div className="desc-photo-wrapper" style={{ margin: '20px 0', borderRadius: '6px', overflow: 'hidden' }}>
-                  <img src={anyFileUrl(videoData.photo1)} alt={`${videoData.title} scene 1`} className="watch-photo" loading="lazy" style={{ width: '100%', borderRadius: '6px' }} />
-                </div>
-              )}
+          {videoData.description1 && (
+            <p
+              className="watch-description-text"
+              style={{
+                fontSize: "1.05rem",
+                color: "#ddd",
+                marginBottom: "20px",
+                textAlign: "justify",
+              }}
+            >
+              {videoData.description1}
+            </p>
+          )}
 
-              {/* Description 2 */}
-              {videoData.description2 && (
-                <p className="watch-description-text" style={{ fontSize: '1rem', color: '#bbb', marginBottom: '20px', textAlign: 'justify' }}>
-                  {videoData.description2}
-                </p>
-              )}
-
-              {/* Scenery 2 */}
-              {videoData.photo2 && (
-                <div className="desc-photo-wrapper" style={{ margin: '20px 0', borderRadius: '6px', overflow: 'hidden' }}>
-                  <img src={anyFileUrl(videoData.photo2)} alt={`${videoData.title} scene 2`} className="watch-photo" loading="lazy" style={{ width: '100%', borderRadius: '6px' }} />
-                </div>
-              )}
+          {videoData.photo1 && (
+            <div
+              className="desc-photo-wrapper"
+              style={{ margin: "20px 0", borderRadius: "6px", overflow: "hidden" }}
+            >
+              <img
+                src={anyFileUrl(videoData.photo1)}
+                alt={`${videoData.title} scene 1`}
+                className="watch-photo"
+                loading="lazy"
+                style={{ width: "100%", borderRadius: "6px" }}
+              />
             </div>
           )}
+
+          {videoData.description2 && (
+            <p
+              className="watch-description-text"
+              style={{
+                fontSize: "1rem",
+                color: "#bbb",
+                marginBottom: "20px",
+                textAlign: "justify",
+              }}
+            >
+              {videoData.description2}
+            </p>
+          )}
+
+          {videoData.photo2 && (
+            <div
+              className="desc-photo-wrapper"
+              style={{ margin: "20px 0", borderRadius: "6px", overflow: "hidden" }}
+            >
+              <img
+                src={anyFileUrl(videoData.photo2)}
+                alt={`${videoData.title} scene 2`}
+                className="watch-photo"
+                loading="lazy"
+                style={{ width: "100%", borderRadius: "6px" }}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {similarVideos.length > 0 && (
         <div className="similar-section">

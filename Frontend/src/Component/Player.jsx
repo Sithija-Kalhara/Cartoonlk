@@ -16,6 +16,14 @@ import axios from "axios";
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 const PUBLIC_CDN = import.meta.env.PUBLIC_CDN || "https://media.cartoonlk.com";
 
+// Only these qualities are ever exposed to the user (saves bandwidth,
+// keeps storage/CDN cost down, and removes 1080p/4K completely).
+const ALLOWED_QUALITIES = ["480p", "720p"];
+const isAllowedLabel = (label = "") => {
+  const l = String(label).toLowerCase();
+  return l.includes("480") || l.includes("720");
+};
+
 /* ---------- URL helpers (encode safe) ---------- */
 const streamUrl = (name = "") => {
   if (!name) return "";
@@ -42,6 +50,7 @@ export default function Player({
   onTimeUpdate,
   onNextEpisode,
   autoPlay = true,
+  poster,
 }) {
   const videoRef = useRef(null);
 
@@ -62,36 +71,51 @@ export default function Player({
   const [subtitleText, setSubtitleText] = useState("");
   const [showNextEp, setShowNextEp] = useState(false);
   const [isBuffering, setIsBuffering] = useState(true);
+  const [playbackError, setPlaybackError] = useState(false);
 
   const inactivityTimeout = useRef(null);
   const noSubTimerRef = useRef(null);
 
   const hasSubtitle = Boolean(videoData?.subtitle);
 
-  // Get video qualities from videoData
+  // Pick a sensible default quality: mobile → 480p first (saves data),
+  // desktop → 720p first. Falls back to whatever is available.
+  const pickDefaultQuality = useCallback((qualities) => {
+    const has720 = qualities.find((q) => q.label.toLowerCase().includes("720"));
+    const has480 = qualities.find((q) => q.label.toLowerCase().includes("480"));
+    const isMobile =
+      typeof window !== "undefined" && window.innerWidth <= 768;
+    if (isMobile && has480) return has480.label;
+    if (has720) return has720.label;
+    if (has480) return has480.label;
+    return qualities[0]?.label || "";
+  }, []);
+
+  // Get video qualities from videoData — filtered down to 480p/720p only
   useEffect(() => {
     if (videoData && Array.isArray(videoData.qualities) && videoData.qualities.length > 0) {
-      setAvailableQualities(videoData.qualities.map((q) => q.label));
+      const filtered = videoData.qualities.filter((q) => isAllowedLabel(q.label));
+      const list = filtered.length > 0 ? filtered : videoData.qualities;
+      setAvailableQualities(list.map((q) => q.label));
       if (!selectedQuality) {
-        setSelectedQuality(videoData.qualities[0]?.label || "");
+        setSelectedQuality(pickDefaultQuality(list));
       }
     }
-  }, [videoData, selectedQuality, setSelectedQuality]);
+  }, [videoData, selectedQuality, setSelectedQuality, pickDefaultQuality]);
 
   const getVideoUrl = () => {
     if (!videoData) return null;
     if (Array.isArray(videoData.qualities) && videoData.qualities.length) {
-      const q = videoData.qualities.find(
+      const filtered = videoData.qualities.filter((q) => isAllowedLabel(q.label));
+      const pool = filtered.length > 0 ? filtered : videoData.qualities;
+      const q = pool.find(
         (x) => String(x.label).trim() === (selectedQuality || "").trim()
       );
       if (q?.filename) return streamUrl(q.filename);
+      if (pool[0]?.filename) return streamUrl(pool[0].filename);
     }
-    const fb =
-      videoData.video4K ||
-      videoData.video1080p ||
-      videoData.video720p ||
-      videoData.video480p ||
-      videoData.video;
+    // 1080p/4K sources are intentionally excluded from the fallback chain.
+    const fb = videoData.video720p || videoData.video480p || videoData.video;
     return fb ? streamUrl(fb) : null;
   };
 
@@ -316,7 +340,7 @@ export default function Player({
     const v = videoRef.current;
     if (!v || !user || !videoData?._id) return;
     let lastSave = 0;
-    const onTimeUpdate = () => {
+    const onTimeUpdateHandler = () => {
       setCurrentTime(v.currentTime);
       setProgress((v.currentTime / v.duration) * 100);
       setShowNextEp(
@@ -325,9 +349,9 @@ export default function Player({
           v.duration > 0 &&
           v.duration - v.currentTime <= 30
       );
-      
+
       if (onTimeUpdate) onTimeUpdate(v.currentTime);
-      
+
       if (
         v.duration > 0 &&
         Math.floor(v.currentTime) % 20 === 0 &&
@@ -354,19 +378,29 @@ export default function Player({
     const onLoadedMetadata = () => {
       setDuration(v.duration);
       setIsBuffering(false);
+      setPlaybackError(false);
     };
     const onWaiting = () => setIsBuffering(true);
-    const onPlaying = () => setIsBuffering(false);
+    const onPlaying = () => {
+      setIsBuffering(false);
+      setPlaybackError(false);
+    };
+    const onError = () => {
+      setIsBuffering(false);
+      setPlaybackError(true);
+    };
 
-    v.addEventListener("timeupdate", onTimeUpdate);
+    v.addEventListener("timeupdate", onTimeUpdateHandler);
     v.addEventListener("loadedmetadata", onLoadedMetadata);
     v.addEventListener("waiting", onWaiting);
     v.addEventListener("playing", onPlaying);
+    v.addEventListener("error", onError);
     return () => {
-      v.removeEventListener("timeupdate", onTimeUpdate);
+      v.removeEventListener("timeupdate", onTimeUpdateHandler);
       v.removeEventListener("loadedmetadata", onLoadedMetadata);
       v.removeEventListener("waiting", onWaiting);
       v.removeEventListener("playing", onPlaying);
+      v.removeEventListener("error", onError);
     };
   }, [videoUrl, videoData, user, getAuthHeaders, onProgressUpdate, onTimeUpdate]);
 
@@ -397,6 +431,7 @@ export default function Player({
     const v = videoRef.current;
     if (!v || !videoUrl) return;
     const wasPlaying = !v.paused;
+    setPlaybackError(false);
     v.src = videoUrl;
     v.load();
     if (wasPlaying && autoPlay) {
@@ -417,6 +452,8 @@ export default function Player({
         controls={false}
         crossOrigin="anonymous"
         muted={isMuted}
+        poster={poster || undefined}
+        onContextMenu={(e) => e.preventDefault()}
       >
         {trackSrc && (
           <track
@@ -430,9 +467,27 @@ export default function Player({
         )}
       </video>
 
-      {isBuffering && (
+      {isBuffering && !playbackError && (
         <div className="buffering-overlay">
           <div className="spinner"></div>
+        </div>
+      )}
+
+      {playbackError && (
+        <div className="playback-error-overlay">
+          <p>Video load වෙන්නේ නැහැ. Try again.</p>
+          <button
+            onClick={() => {
+              const v = videoRef.current;
+              if (!v || !videoUrl) return;
+              setPlaybackError(false);
+              v.src = videoUrl;
+              v.load();
+              v.play().catch(() => {});
+            }}
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -450,9 +505,9 @@ export default function Player({
           {subtitleText}
         </div>
       )}
-      
+
       <div className="brand-watermark brand-watermark--br">CartoonLK</div>
-      
+
       {noSubtitleMsg && <div className="toast-overlay">No Subtitles</div>}
 
       <div
@@ -469,9 +524,9 @@ export default function Player({
           </span>
         )}
       </div>
-      
+
       <div className="tap-zone middle" onClick={togglePlayPause}></div>
-      
+
       <div
         className="tap-zone right"
         onDoubleClick={() => {
